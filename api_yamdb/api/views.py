@@ -21,8 +21,11 @@ class RegisterViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
     def create(self, request):
         serializer = RegisterSerializer(data=request.data)
-        serializer.is_valid(raise_exception=False)
+        valid = serializer.is_valid(raise_exception=False)
         user, stat = User.objects.get_or_create(**serializer.validated_data)
+        if not valid and user.username != request.data.get('username'):
+            return Response('Неверный запрос',
+                            status=status.HTTP_400_BAD_REQUEST)
         confirmation_code = default_token_generator.make_token(user)
         send_mail(
             subject='Ваш код регистрации',
