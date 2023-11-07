@@ -35,7 +35,7 @@ class RegisterViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-class UserReceiveTokenViewSet(mixins.CreateModelMixin,
+class UserRecieveTokenViewSet(mixins.CreateModelMixin,
                               viewsets.GenericViewSet):
     queryset = User.objects.all()
     serializer_class = UserRecieveTokenSerializer
