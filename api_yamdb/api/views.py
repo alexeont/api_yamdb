@@ -21,7 +21,7 @@ class RegisterViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
     def create(self, request):
         serializer = RegisterSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        serializer.is_valid(raise_exception=False)
         user, stat = User.objects.get_or_create(**serializer.validated_data)
         confirmation_code = default_token_generator.make_token(user)
         send_mail(
