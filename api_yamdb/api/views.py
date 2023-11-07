@@ -14,9 +14,7 @@ class GenreViewSet(generics.ListCreateAPIView):
 
 class GenreDestroyViewSet(generics.DestroyAPIView):
     queryset = Genre.objects.all()
-    filter_backends = (filters.SearchFilter,)
     serializer_class = GenreSerializer
-    search_fields = ('name',)
 
     def get_object(self):
         return Genre.objects.get(slug=self.kwargs.get('genre_slug'))
@@ -24,7 +22,9 @@ class GenreDestroyViewSet(generics.DestroyAPIView):
 
 class CategoryViewSet(generics.ListCreateAPIView):
     queryset = Category.objects.all()
+    filter_backends = (filters.SearchFilter,)
     serializer_class = CategorySerializer
+    search_fields = ('name',)
 
 
 class CategoryDestroyViewSet(generics.DestroyAPIView):
