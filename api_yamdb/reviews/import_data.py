@@ -29,7 +29,6 @@ def import_data_from_csv():
                 category=Category.objects.get(id=int(row['category'])),
             )
 
-
     with open('static/data/genre_title.csv',
               newline='',
               encoding='utf-8') as csvfile:
@@ -40,12 +39,12 @@ def import_data_from_csv():
             try:
                 with connection.cursor() as cursor:
                     cursor.execute(
-                        "INSERT INTO reviews_title_genre (title_id,genre_id) VALUES (%s, %s)",
-                        [title_id, genre_id]
+                        'INSERT INTO reviews_title_genre'
+                        f'(title_id,genre_id) VALUES ({title_id}, {genre_id})'
                     )
 
             except Exception as e:
-                print(f"Error: {e}")
+                print(f'Error: {e}')
 
     # with open('static/data/comments.csv',
     #           newline='',
