@@ -17,6 +17,8 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, data):
         if data.get('username') == 'me':
             raise serializers.ValidationError('Недопустимое имя пользователя')
+        if User.objects.filter(email=data.get('email')):
+            raise serializers.ValidationError('Такой e-mail уже есть')
         if User.objects.filter(username=data.get('username')):
             raise serializers.ValidationError('Такой пользователь уже есть')
         return data

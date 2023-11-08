@@ -1,5 +1,5 @@
 from django.urls import path, include
-from rest_framework.routers import SimpleRouter, DefaultRouter
+from rest_framework.routers import SimpleRouter
 
 from .views import (
     CommentViewSet,
@@ -16,9 +16,7 @@ from .views import (
 
 s_router_v1 = SimpleRouter()
 s_router_v1.register(r'titles', TitleViewSet)  # Full
-
-d_router_v1 = DefaultRouter()
-d_router_v1.register('users', UserViewSet, basename='users')
+s_router_v1.register(r'users', UserViewSet, basename='users')
 s_router_v1.register(
     r'titles/(?P<title_id>\d+)/reviews',
     ReviewViewSet,
@@ -44,5 +42,4 @@ urlpatterns = [
     path('v1/auth/token/', UserRecieveTokenViewSet.as_view({'post': 'create'}),
          name='token'),
     path('v1/', include(s_router_v1.urls)),
-    path('', include(d_router_v1.urls)),
 ]

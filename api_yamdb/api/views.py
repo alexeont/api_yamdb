@@ -29,22 +29,22 @@ class RegisterViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
     permission_classes = (permissions.AllowAny,)
 
     def create(self, request):
-        serializer = RegisterSerializer(data=request.data)
-        valid = serializer.is_valid(raise_exception=False)
-        user, stat = User.objects.get_or_create(**serializer.validated_data)
-        if not valid and user.username != request.data.get('username'):
-            return Response('Неверный запрос',
-                            status=status.HTTP_400_BAD_REQUEST)
+        if not User.objects.filter(username=request.data.get('username'),
+                                   email=request.data.get('email')).exists():
+            serializer = RegisterSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            user = User.objects.create(**serializer.validated_data)
+        else:
+            user = User.objects.get(username=request.data.get('username'))
         confirmation_code = default_token_generator.make_token(user)
         send_mail(
             subject='Ваш код регистрации',
-            message=(f'Код регистрации для пользователя '
-                     f'{serializer.data.get("username")}: '
+            message=(f'Код регистрации для {request.data.get("username")}: '
                      f'{confirmation_code}'),
                     from_email='domashkapraktikum@yandex.ru',
-                    recipient_list=[serializer.data.get('email')],
+                    recipient_list=[request.data.get('email')],
                     fail_silently=True,)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(request.data, status=status.HTTP_200_OK)
 
 
 class UserRecieveTokenViewSet(mixins.CreateModelMixin,
@@ -69,7 +69,7 @@ class UserViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
                   viewsets.GenericViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (Admin,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
 
@@ -92,17 +92,11 @@ class UserViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
     def get_user_by_username(self, request, username):
         user = get_object_or_404(User, username=username)
         if request.method == 'PATCH':
-            if self.request.user.role != 'admin':
-                return Response('Нет доступа',
-                                status=status.HTTP_400_BAD_REQUEST)
             serializer = UserSerializer(user, data=request.data, partial=True)
             serializer.is_valid(raise_exception=True)
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         elif request.method == 'DELETE':
-            if self.request.user.role != 'admin':
-                return Response('Нет доступа',
-                                status=status.HTTP_400_BAD_REQUEST)
             user.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         serializer = UserSerializer(user)
