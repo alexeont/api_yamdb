@@ -1,9 +1,31 @@
-from django.urls import include, path
-from rest_framework import routers
+from django.urls import path, include
+from rest_framework.routers import SimpleRouter, DefaultRouter
 
-from api.views import (RegisterViewSet, UserRecieveTokenViewSet, UserViewSet)
+from .views import (
+    TitleViewSet,
+    GenreViewSet,
+    GenreDestroyViewSet,
+    CategoryViewSet,
+    CategoryDestroyViewSet
+)
+(RegisterViewSet, UserRecieveTokenViewSet, UserViewSet)
 
-router = routers.DefaultRouter()
+router = SimpleRouter()
+router.register(r'titles', TitleViewSet)
+
+urlpatterns = [
+    path('v1/', include(router.urls)),
+    path('v1/genres/',
+         GenreViewSet.as_view()),
+    path('v1/categories/',
+         CategoryViewSet.as_view()),
+    path('v1/genres/<slug:genre_slug>/',
+         GenreDestroyViewSet.as_view()),
+    path('v1/categories/<slug:category_slug>/',
+         CategoryDestroyViewSet.as_view())
+]
+
+router = DefaultRouter()
 router.register('users', UserViewSet, basename='users')
 
 urlpatterns = [
@@ -12,4 +34,5 @@ urlpatterns = [
     path('auth/token/', UserRecieveTokenViewSet.as_view({'post': 'create'}),
          name='token'),
     path('', include(router.urls))
+
 ]

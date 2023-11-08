@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
 from users.models import User
+from reviews.models import Genre, Category, Title
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -42,3 +43,35 @@ class UserSerializer(serializers.ModelSerializer):
         if self.instance.role != 'admin':
             return self.instance.role
         return role
+
+
+class GenreSerializer(serializers.ModelSerializer):
+    slug = serializers.SlugField()
+
+    class Meta:
+        fields = ('name', 'slug')
+        model = Genre
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    slug = serializers.SlugField()
+
+    class Meta:
+        fields = ('name', 'slug')
+        model = Category
+
+
+class TitleSerializer(serializers.ModelSerializer):
+    genre = serializers.SlugRelatedField(queryset=Genre.objects.all(),
+                                         many=True,
+                                         slug_field='slug')
+    category = serializers.SlugRelatedField(queryset=Category.objects.all(),
+                                            slug_field='slug')
+
+    class Meta:
+        fields = ('id', 'name', 'year', 'raiting',
+                  'description', 'category', 'genre')
+        model = Title
+        read_only_fields = ('rating',)
+
+      
