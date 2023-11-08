@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 from rest_framework.validators import UniqueTogetherValidator
 
+from .views import rating_data
 from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import User
 
@@ -69,7 +70,7 @@ class TitleSerializer(serializers.ModelSerializer):
                                          slug_field='slug')
     category = serializers.SlugRelatedField(queryset=Category.objects.all(),
                                             slug_field='slug')
-    # rating =?
+    rating = serializers.SerializerMethodField()
 
     class Meta:
         fields = ('id', 'name', 'year', 'rating',
@@ -77,7 +78,10 @@ class TitleSerializer(serializers.ModelSerializer):
         model = Title
         read_only_fields = ('rating',)
 
-    # def get_rating?
+    def get_rating(self, obj):
+        all_ratings = rating_data.get(obj.title)
+        average_rating = sum(all_ratings) / len(all_ratings)
+        return average_rating
 
 
 class ReviewSerializer(serializers.ModelSerializer):

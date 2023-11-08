@@ -20,6 +20,13 @@ from .serializers import (CategorySerializer,
 from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import User
 
+''' Словарь рейтингов. Формат:
+    rating_data = {
+        title: [ratings]
+    }
+'''
+rating_data = {}
+
 ''' User Views. '''
 
 
@@ -160,6 +167,12 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+        rating = serializer.data.get('rating')
+        title = serializer.data.get('title')
+        if title in rating_data:
+            rating_data[title].append(rating)
+        else:
+            rating_data.update({title: [rating]})
 
 
 class CommentViewSet(viewsets.ModelViewSet):
