@@ -43,11 +43,6 @@ class UserSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError('Недопустимое имя пользователя')
         return username
 
-    def validate_role(self, role):
-        if self.instance.role != 'admin':
-            return self.instance.role
-        return role
-
 
 class GenreSerializer(serializers.ModelSerializer):
     slug = serializers.SlugField()
