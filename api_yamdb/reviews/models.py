@@ -3,12 +3,13 @@ from django.db import models
 from .constants import (MAX_REVIEW_CHARACTERS,
                         MAX_COMMENT_CHARACTERS,
                         TRUNCATED_MODEL_NAME)
+from users.models import User
 
 
 class BaseModel(models.Model):
     """ Базовый класс для Ревью и Коммента. """
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
-    #author = models.ForeignKey(User, on_delete=models.CASCADE) # Custom User
+    author = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
         abstract = True
@@ -19,7 +20,7 @@ class Genre(models.Model):
     slug = models.SlugField(unique=True, max_length=50)
 
     def __str__(self):
-        return self.name
+        return self.name[:TRUNCATED_MODEL_NAME]
 
 
 class Category(models.Model):
@@ -27,7 +28,7 @@ class Category(models.Model):
     slug = models.SlugField(unique=True, max_length=50)
 
     def __str__(self):
-        return self.name
+        return self.name[:TRUNCATED_MODEL_NAME]
 
 
 class Title(models.Model):
@@ -47,11 +48,12 @@ class Title(models.Model):
     )
 
     def __str__(self):
-        self.genre
+        self.genre[:TRUNCATED_MODEL_NAME]
 
- class Review(BaseModel):
+
+class Review(BaseModel):
     """ Отзыв на тайтл. """
-    #title = models.ForeignKey(Title, on_delete=models.CASCADE)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
     score = models.PositiveSmallIntegerField()
     text = models.TextField(max_length=MAX_REVIEW_CHARACTERS)
 
