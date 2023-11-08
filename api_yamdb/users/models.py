@@ -32,12 +32,16 @@ class User(AbstractUser):
             'unique': 'Пользователь с таким именем уже есть',
         }
     )
-    email = models.EmailField('E-mail: ', max_length=254, null=False)
+    email = models.EmailField('E-mail: ', max_length=254,
+                              unique=True, null=False)
     first_name = models.CharField('Имя: ', max_length=150, blank=True)
     last_name = models.CharField('Фамилия: ', max_length=150, blank=True)
     role = models.CharField('Роль: ', max_length=9,
                             choices=ROLE_CHOICES, default='user')
     bio = models.TextField('Биография: ', blank=True)
+
+    class Meta:
+        ordering = ('username',)
 
     def __str__(self):
         return self.username
