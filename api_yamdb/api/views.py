@@ -22,7 +22,8 @@ from users.models import User
 
 ''' Словарь рейтингов. Формат:
     rating_data = {
-        title: [ratings]
+        title: {user: his_rating,
+                another user: another rating},
     }
 '''
 rating_data = {}
@@ -161,24 +162,47 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    queryset = Review.objects.all()
     serializer_class = ReviewSerializer
     permission_classes = (IsAuthorOrReadOnly | Admin | Moderator,)
 
+    def get_title(self):
+        return get_object_or_404(Title, id=self.kwargs.get('title_id'))
+
+    def get_queryset(self):
+        return self.get_title().reviews.all()
+
+    def update_title_rating(self, title):
+        reviews = Title.reviews.all()
+        total_score = sum(review.score for review in reviews)
+        average_rating = total_score / reviews.count()
+        title.rating = round(average_rating, 1)
+        title.save()
+
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
-        rating = serializer.data.get('rating')
-        title = serializer.data.get('title')
-        if title in rating_data:
-            rating_data[title].append(rating)
-        else:
-            rating_data.update({title: [rating]})
+        serializer.save(author=self.request.user,
+                        title=self.get_title())
+
+    def perform_update(self, serializer):
+        serializer.save()
+        title = serializer.instance.title
+        self.update_title_rating(title)
+
+    def perform_destroy(self, instance):
+        title = instance.title
+        instance.delete()
+        self.update_title_rating(title)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = (IsAuthorOrReadOnly | Admin | Moderator,)
 
+    def get_title(self):
+        return get_object_or_404(Title, id=self.kwargs.get('title_id'))
+
+    def get_queryset(self):
+        return self.get_title().reviews.all()
+
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
+        serializer.save(author=self.request.user,
+                        title=self.get_title())
