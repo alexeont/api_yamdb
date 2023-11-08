@@ -9,12 +9,14 @@ from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
 
 from .serializers import (CategorySerializer,
+                          CommentSerializer,
                           GenreSerializer,
                           RegisterSerializer,
+                          ReviewSerializer,
                           TitleSerializer,
                           UserRecieveTokenSerializer,
                           UserSerializer)
-from reviews.models import Genre, Category, Title
+from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import User
 
 ''' User Views. '''
@@ -143,3 +145,20 @@ class TitleViewSet(viewsets.ModelViewSet):
     serializer_class = TitleSerializer
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+    
+class ReviewViewSet(viewsets.ModelViewSet):
+    queryset = Review.objects.all()
+    serializer_class = ReviewSerializer
+    #permission_classes =
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
+
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all()
+    serializer_class = CommentSerializer
+    #permission_classes =
+
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
