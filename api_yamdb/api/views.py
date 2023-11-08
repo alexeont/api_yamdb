@@ -1,61 +1,23 @@
-from rest_framework import viewsets, generics, filters
-from django_filters.rest_framework import DjangoFilterBackend
-
-from reviews.models import Genre, Category, Title
-from .serializers import GenreSerializer, CategorySerializer, TitleSerializer
-
-
-class GenreViewSet(generics.ListCreateAPIView):
-    queryset = Genre.objects.all()
-    filter_backends = (filters.SearchFilter,)
-    serializer_class = GenreSerializer
-    search_fields = ('name',)
-
-
-class GenreDestroyViewSet(generics.DestroyAPIView):
-    queryset = Genre.objects.all()
-    serializer_class = GenreSerializer
-
-    def get_object(self):
-        return Genre.objects.get(slug=self.kwargs.get('genre_slug'))
-
-
-class CategoryViewSet(generics.ListCreateAPIView):
-    queryset = Category.objects.all()
-    filter_backends = (filters.SearchFilter,)
-    serializer_class = CategorySerializer
-    search_fields = ('name',)
-
-
-class CategoryDestroyViewSet(generics.DestroyAPIView):
-    queryset = Category.objects.all()
-
-    def get_object(self):
-        return Category.objects.get(slug=self.kwargs.get('category_slug'))
-
-
-class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
-    serializer_class = TitleSerializer
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
-    
-=======
-
 from django.core.mail import send_mail
 from django.shortcuts import get_object_or_404
-from rest_framework import mixins, permissions
-from rest_framework import status, viewsets, filters
+from rest_framework import (filters, generics, mixins, permissions,
+                            status, viewsets)
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth.tokens import default_token_generator
+from django_filters.rest_framework import DjangoFilterBackend
 
-from api.serializers import (RegisterSerializer,
-                             UserRecieveTokenSerializer,
-                             UserSerializer)
-
+from .serializers import (CategorySerializer,
+                          GenreSerializer,
+                          RegisterSerializer,
+                          TitleSerializer,
+                          UserRecieveTokenSerializer,
+                          UserSerializer)
+from reviews.models import Genre, Category, Title
 from users.models import User
+
+''' User Views. '''
 
 
 class RegisterViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
@@ -142,3 +104,42 @@ class UserViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
             return Response(status=status.HTTP_204_NO_CONTENT)
         serializer = UserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+''' Core Views. '''
+
+
+class GenreViewSet(generics.ListCreateAPIView):
+    queryset = Genre.objects.all()
+    filter_backends = (filters.SearchFilter,)
+    serializer_class = GenreSerializer
+    search_fields = ('name',)
+
+
+class GenreDestroyViewSet(generics.DestroyAPIView):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+
+    def get_object(self):
+        return Genre.objects.get(slug=self.kwargs.get('genre_slug'))
+
+
+class CategoryViewSet(generics.ListCreateAPIView):
+    queryset = Category.objects.all()
+    filter_backends = (filters.SearchFilter,)
+    serializer_class = CategorySerializer
+    search_fields = ('name',)
+
+
+class CategoryDestroyViewSet(generics.DestroyAPIView):
+    queryset = Category.objects.all()
+
+    def get_object(self):
+        return Category.objects.get(slug=self.kwargs.get('category_slug'))
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
+    serializer_class = TitleSerializer
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
