@@ -39,10 +39,10 @@ urlpatterns = [
          GenreDestroyViewSet.as_view()),
     path('v1/categories/<slug:category_slug>/',
          CategoryDestroyViewSet.as_view()),
-    path('v1/', include(s_router_v1.urls)),
-    path('auth/signup/', RegisterViewSet.as_view({'post': 'create'}),
+    path('v1/auth/signup/', RegisterViewSet.as_view({'post': 'create'}),
          name='signup'),
-    path('auth/token/', UserRecieveTokenViewSet.as_view({'post': 'create'}),
+    path('v1/auth/token/', UserRecieveTokenViewSet.as_view({'post': 'create'}),
          name='token'),
+    path('v1/', include(s_router_v1.urls)),
     path('', include(d_router_v1.urls)),
 ]

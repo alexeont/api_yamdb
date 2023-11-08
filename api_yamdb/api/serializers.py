@@ -69,15 +69,15 @@ class TitleSerializer(serializers.ModelSerializer):
                                          slug_field='slug')
     category = serializers.SlugRelatedField(queryset=Category.objects.all(),
                                             slug_field='slug')
-    # rating
+    # rating =?
 
     class Meta:
-        fields = ('id', 'name', 'year', 'raiting',
+        fields = ('id', 'name', 'year', 'rating',
                   'description', 'category', 'genre')
         model = Title
         read_only_fields = ('rating',)
-    
-    # def get_rating:
+
+    # def get_rating?
 
 
 class ReviewSerializer(serializers.ModelSerializer):
