@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
 
-from .permissions import Admin, IsAuthorOrReadOnly, Moderator
+from .permissions import Admin, IsAuthorOrReadOnly, Moderator, ReadOnly
 from .serializers import (CategorySerializer,
                           CommentSerializer,
                           GenreSerializer,
@@ -116,7 +116,7 @@ class GenreViewSet(generics.ListCreateAPIView):
     queryset = Genre.objects.all()
     filter_backends = (filters.SearchFilter,)
     serializer_class = GenreSerializer
-    permission_classes = (Admin,)
+    permission_classes = (Admin | ReadOnly,)
     search_fields = ('name',)
 
 
@@ -133,7 +133,7 @@ class CategoryViewSet(generics.ListCreateAPIView):
     queryset = Category.objects.all()
     filter_backends = (filters.SearchFilter,)
     serializer_class = CategorySerializer
-    permission_classes = (Admin,)
+    permission_classes = (Admin | ReadOnly,)
     search_fields = ('name',)
 
 
@@ -148,7 +148,7 @@ class CategoryDestroyViewSet(generics.DestroyAPIView):
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     serializer_class = TitleSerializer
-    permission_classes = (Admin,)
+    permission_classes = (Admin | ReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
 
