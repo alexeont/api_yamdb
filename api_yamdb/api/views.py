@@ -17,7 +17,7 @@ from .serializers import (CategorySerializer,
                           TitleSerializer,
                           UserRecieveTokenSerializer,
                           UserSerializer)
-from reviews.models import Category, Comment, Genre, Review, Title
+from reviews.models import Category, Genre, Review, Title
 from users.models import User
 
 
@@ -151,6 +151,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (IsAuthorOrReadOnly | Admin | Moderator,)
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_title(self):
         return get_object_or_404(Title, id=self.kwargs.get('title_id'))
@@ -159,7 +160,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return self.get_title().reviews.all()
 
     def update_title_rating(self, title):
-        reviews = Title.reviews.all()
+        reviews = self.get_queryset()
         total_score = sum(review.score for review in reviews)
         average_rating = total_score / reviews.count()
         title.rating = round(average_rating, 1)
@@ -183,13 +184,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (IsAuthorOrReadOnly | Admin | Moderator,)
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
-    def get_title(self):
-        return get_object_or_404(Title, id=self.kwargs.get('title_id'))
+    def get_review(self):
+        return get_object_or_404(Review, id=self.kwargs.get('review_id'))
 
     def get_queryset(self):
-        return self.get_title().reviews.all()
+        return self.get_review().comments.all()
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user,
-                        title=self.get_title())
+                        review=self.get_review())
