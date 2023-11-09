@@ -7,6 +7,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
+from django.db.models import Q
+from rest_framework.filters import BaseFilterBackend
 
 from .permissions import Admin, IsAuthorOrReadOnly, Moderator, ReadOnly
 from .serializers import (CategorySerializer,
@@ -141,11 +143,23 @@ class CategoryDestroyViewSet(generics.DestroyAPIView):
         return Category.objects.get(slug=self.kwargs.get('category_slug'))
 
 
+class FilterBackend(BaseFilterBackend):
+    def filter_queryset(self, request, queryset, view):
+        genre = request.GET.get('genre')
+        category = request.GET.get('category')
+        if genre:
+            return queryset.filter(Q(genre__slug=genre))
+        if category:
+            queryset = queryset.filter(Q(category__slug=category))
+        return queryset
+
+
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     permission_classes = (Admin | ReadOnly,)
-    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+    filter_backends = (DjangoFilterBackend,
+                       FilterBackend)
+    filterset_fields = ('name', 'year')
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_serializer_class(self):
