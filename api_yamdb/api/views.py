@@ -54,7 +54,7 @@ class UserRecieveTokenViewSet(mixins.CreateModelMixin,
     serializer_class = UserRecieveTokenSerializer
     permission_classes = (permissions.AllowAny,)
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request):
         serializer = UserRecieveTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         confirmation_code = serializer.validated_data['confirmation_code']
@@ -74,8 +74,8 @@ class UserViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
 
-    @action(detail=False, methods=['get', 'patch'], url_path='me',
-            url_name='me', permission_classes=(permissions.IsAuthenticated,))
+    @action(methods=['get', 'patch'], detail=False,
+            url_path='me', permission_classes=(permissions.IsAuthenticated,))
     def get_me_data(self, request):
         if request.method == 'PATCH':
             serializer = UserSerializer(request.user,
@@ -88,8 +88,8 @@ class UserViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['get', 'patch', 'delete'],
-            url_path=r'(?P<username>[\w.@+-]+)', url_name='user')
+    @action(methods=['get', 'patch', 'delete'], detail=False,
+            url_path=r'(?P<username>[\w.@+-]+)')
     def get_user_by_username(self, request, username):
         user = get_object_or_404(User, username=username)
         if request.method == 'PATCH':
