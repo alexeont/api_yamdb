@@ -22,6 +22,9 @@ class Moderator(permissions.BasePermission):
             return False
         return (request.user.role == 'moderator')
 
+    def has_object_permission(self, request, view, obj):
+        return (request.user.role == 'moderator')
+
 
 class Admin(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -29,3 +32,8 @@ class Admin(permissions.BasePermission):
             return False
         return (request.user.role == ('admin' or 'superuser')
                 or request.user.is_staff)
+
+    def has_object_permission(self, request, view, obj):
+        if not request.user.is_authenticated:
+            return False
+        return (request.user.role == ('admin' or 'superuser'))
