@@ -145,7 +145,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
     permission_classes = (Admin | ReadOnly,)
     filter_backends = (DjangoFilterBackend, filters.SearchFilter)
-    filterset_fields = ('category__slug', 'title_genre', 'name', 'year')
+    filterset_fields = ('category__slug', 'genre_slug', 'name', 'year')
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_serializer_class(self):
