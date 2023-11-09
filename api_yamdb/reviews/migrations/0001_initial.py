@@ -64,6 +64,19 @@ class Migration(migrations.Migration):
             field=models.ManyToManyField(related_name='title_genre', through='reviews.TitleGenre', to='reviews.Genre'),
         ),
         migrations.CreateModel(
+            name='TitleGenre',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('genre', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='reviews.genre')),
+                ('title', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='reviews.title')),
+            ],
+        ),
+        migrations.AddField(
+            model_name='title',
+            name='genre',
+            field=models.ManyToManyField(related_name='title_genre', through='reviews.TitleGenre', to='reviews.Genre'),
+        ),
+        migrations.CreateModel(
             name='Review',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -71,7 +84,7 @@ class Migration(migrations.Migration):
                 ('score', models.PositiveSmallIntegerField()),
                 ('text', models.TextField(max_length=500)),
                 ('author', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reviews', to=settings.AUTH_USER_MODEL)),
-                ('title', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='reviews', to='reviews.title')),
+                ('title', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='title', to='reviews.title')),
             ],
             options={
                 'ordering': ('pub_date',),
