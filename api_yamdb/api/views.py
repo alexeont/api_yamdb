@@ -14,8 +14,9 @@ from .serializers import (CategorySerializer,
                           GenreSerializer,
                           RegisterSerializer,
                           ReviewSerializer,
-                          TitleSerializer,
                           UserRecieveTokenSerializer,
+                          CreateTitleSerializer,
+                          DetailedTitleSerializer,
                           UserSerializer)
 from reviews.models import Category, Genre, Review, Title
 from users.models import User
@@ -118,7 +119,7 @@ class GenreViewSet(generics.ListCreateAPIView):
 class GenreDestroyViewSet(generics.DestroyAPIView):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (Admin,)
+    permission_classes = (Admin, )
 
     def get_object(self):
         return Genre.objects.get(slug=self.kwargs.get('genre_slug'))
@@ -142,10 +143,15 @@ class CategoryDestroyViewSet(generics.DestroyAPIView):
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
     permission_classes = (Admin | ReadOnly,)
-    filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
+    filterset_fields = ('category__slug', 'genre_slug', 'name', 'year')
+    http_method_names = ('get', 'post', 'patch', 'delete')
+
+    def get_serializer_class(self):
+        if self.action == 'create' or self.action == 'patch':
+            return CreateTitleSerializer
+        return DetailedTitleSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
@@ -168,7 +174,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user,
-                        title=self.get_title())
+                        title=self.get_title(),
+                        rating=None)
 
     def perform_update(self, serializer):
         serializer.save()
