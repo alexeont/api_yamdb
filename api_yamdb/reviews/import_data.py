@@ -1,22 +1,44 @@
 import csv
-from reviews.models import Genre, Category, Title
-from django.db import connection
+from reviews.models import Genre, Category, Title, TitleGenre, Comment, Review
+from users.models import User
 
 
 def import_data_from_csv():
+
+    with open('static/data/users.csv',
+              newline='',
+              encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            User.objects.get_or_create(
+                id=row['id'],
+                username=row['username'],
+                email=row['email'],
+                role=row['role'],
+                bio=row['bio'],
+                first_name=row['first_name'],
+                last_name=row['last_name'],
+            )
+
     with open('static/data/genre.csv',
               newline='',
               encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            Genre.objects.get_or_create(name=row['name'], slug=row['slug'])
+            Genre.objects.get_or_create(
+                name=row['name'],
+                slug=row['slug']
+            )
 
     with open('static/data/category.csv',
               newline='',
               encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            Category.objects.get_or_create(name=row['name'], slug=row['slug'])
+            Category.objects.get_or_create(
+                name=row['name'],
+                slug=row['slug']
+            )
 
     with open('static/data/titles.csv',
               newline='',
@@ -34,41 +56,32 @@ def import_data_from_csv():
               encoding='utf-8') as csvfile:
         reader = csv.DictReader(csvfile)
         for row in reader:
-            title_id = int(row['title_id'])
-            genre_id = int(row['genre_id'])
-            try:
-                with connection.cursor() as cursor:
-                    cursor.execute(
-                        'INSERT INTO reviews_title_genre'
-                        f'(title_id,genre_id) VALUES ({title_id}, {genre_id})'
-                    )
+            TitleGenre.objects.get_or_create(
+                title=Title.objects.get(id=int(row['title_id'])),
+                genre=Genre.objects.get(id=int(row['genre_id'])),
+            )
 
-            except Exception as e:
-                print(f'Error: {e}')
+    with open('static/data/review.csv',
+              newline='',
+              encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            Review.objects.get_or_create(
+                text=row['text'],
+                score=int(row['score']),
+                title=Title.objects.get(id=int(row['title_id'],)),
+                pub_date=row['pub_date'],
+                author=User.objects.get(id=int(row['author'],))
+            )
 
-    # with open('static/data/comments.csv',
-    #           newline='',
-    #           encoding='utf-8') as csvfile:
-    #     reader = csv.DictReader(csvfile)
-    #     # for row in reader:
-    #     #     Comment.objects.get_or_create(
-    #     #         #атрибуты комментария
-    #     #     )
-
-    # with open('static/data/review.csv',
-    #           newline='',
-    #           encoding='utf-8') as csvfile:
-    #     reader = csv.DictReader(csvfile)
-    #     # for row in reader:
-    #     #     Review.objects.get_or_create(
-    #     #         #атрибуты ревью
-    #     #     )
-
-    # with open('static/data/users.csv',
-    #           newline='',
-    #           encoding='utf-8') as csvfile:
-    #     reader = csv.DictReader(csvfile)
-    #     # for row in reader:
-    #     #     Title.objects.get_or_create(
-    #     #         #атрибуты юзера
-    #     #     )
+    with open('static/data/comments.csv',
+              newline='',
+              encoding='utf-8') as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            Comment.objects.get_or_create(
+                text=row['text'],
+                review=Review.objects.get(id=int(row['review_id'])),
+                pub_date=row['pub_date'],
+                author=User.objects.get(id=int(row['author'],))
+            )
