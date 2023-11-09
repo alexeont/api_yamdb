@@ -14,10 +14,11 @@ from .serializers import (CategorySerializer,
                           GenreSerializer,
                           RegisterSerializer,
                           ReviewSerializer,
-                          TitleSerializer,
                           UserRecieveTokenSerializer,
+                          CreateTitleSerializer,
+                          DetailedTitleSerializer,
                           UserSerializer)
-from reviews.models import Category, Comment, Genre, Review, Title
+from reviews.models import Category, Genre, Review, Title
 from users.models import User
 
 
@@ -54,7 +55,7 @@ class UserRecieveTokenViewSet(mixins.CreateModelMixin,
     serializer_class = UserRecieveTokenSerializer
     permission_classes = (permissions.AllowAny,)
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request):
         serializer = UserRecieveTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         confirmation_code = serializer.validated_data['confirmation_code']
@@ -74,8 +75,8 @@ class UserViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
 
-    @action(detail=False, methods=['get', 'patch'], url_path='me',
-            url_name='me', permission_classes=(permissions.IsAuthenticated,))
+    @action(methods=['get', 'patch'], detail=False,
+            url_path='me', permission_classes=(permissions.IsAuthenticated,))
     def get_me_data(self, request):
         if request.method == 'PATCH':
             serializer = UserSerializer(request.user,
@@ -88,8 +89,8 @@ class UserViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=False, methods=['get', 'patch', 'delete'],
-            url_path=r'(?P<username>[\w.@+-]+)', url_name='user')
+    @action(methods=['get', 'patch', 'delete'], detail=False,
+            url_path=r'(?P<username>[\w.@+-]+)')
     def get_user_by_username(self, request, username):
         user = get_object_or_404(User, username=username)
         if request.method == 'PATCH':
@@ -118,7 +119,7 @@ class GenreViewSet(generics.ListCreateAPIView):
 class GenreDestroyViewSet(generics.DestroyAPIView):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (Admin,)
+    permission_classes = (Admin, )
 
     def get_object(self):
         return Genre.objects.get(slug=self.kwargs.get('genre_slug'))
@@ -142,15 +143,21 @@ class CategoryDestroyViewSet(generics.DestroyAPIView):
 
 class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all()
-    serializer_class = TitleSerializer
     permission_classes = (Admin | ReadOnly,)
-    filter_backends = (DjangoFilterBackend,)
+    filter_backends = (DjangoFilterBackend, filters.SearchFilter)
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+    http_method_names = ('get', 'post', 'patch', 'delete')
+
+    def get_serializer_class(self):
+        if self.action == 'create' or self.action == 'patch':
+            return CreateTitleSerializer
+        return DetailedTitleSerializer
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
     serializer_class = ReviewSerializer
     permission_classes = (IsAuthorOrReadOnly | Admin | Moderator,)
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_title(self):
         return get_object_or_404(Title, id=self.kwargs.get('title_id'))
@@ -159,7 +166,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
         return self.get_title().reviews.all()
 
     def update_title_rating(self, title):
-        reviews = Title.reviews.all()
+        reviews = self.get_queryset()
         total_score = sum(review.score for review in reviews)
         average_rating = total_score / reviews.count()
         title.rating = round(average_rating, 1)
@@ -183,13 +190,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (IsAuthorOrReadOnly | Admin | Moderator,)
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
-    def get_title(self):
-        return get_object_or_404(Title, id=self.kwargs.get('title_id'))
+    def get_review(self):
+        return get_object_or_404(Review, id=self.kwargs.get('review_id'))
 
     def get_queryset(self):
-        return self.get_title().reviews.all()
+        return self.get_review().comments.all()
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user,
-                        title=self.get_title())
+                        review=self.get_review())

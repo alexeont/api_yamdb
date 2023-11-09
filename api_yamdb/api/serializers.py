@@ -1,6 +1,5 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
-from rest_framework.validators import UniqueTogetherValidator
 
 from reviews.models import Category, Comment, Genre, Review, Title
 from users.models import User
@@ -45,7 +44,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class GenreSerializer(serializers.ModelSerializer):
-    slug = serializers.SlugField()
 
     class Meta:
         fields = ('name', 'slug')
@@ -53,41 +51,53 @@ class GenreSerializer(serializers.ModelSerializer):
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    slug = serializers.SlugField()
 
     class Meta:
         fields = ('name', 'slug')
         model = Category
 
 
-class TitleSerializer(serializers.ModelSerializer):
+class DetailedTitleSerializer(serializers.ModelSerializer):
+    category = CategorySerializer()
+    genre = GenreSerializer(many=True)
+
+    class Meta:
+        model = Title
+        fields = ('id', 'name', 'year', 'rating',
+                  'description', 'category', 'genre')
+
+
+class CreateTitleSerializer(serializers.ModelSerializer):
+    category = serializers.SlugRelatedField(queryset=Category.objects.all(),
+                                            slug_field='slug')
     genre = serializers.SlugRelatedField(queryset=Genre.objects.all(),
                                          many=True,
                                          slug_field='slug')
-    category = serializers.SlugRelatedField(queryset=Category.objects.all(),
-                                            slug_field='slug')
 
     class Meta:
-        fields = ('id', 'name', 'year', 'rating',
-                  'description', 'category', 'genre')
         model = Title
+        fields = ('id', 'name', 'year', 'description', 'category', 'genre')
         read_only_fields = ('rating',)
 
 
 class ReviewSerializer(serializers.ModelSerializer):
-    author = SlugRelatedField(slug_field='username', read_only=True)
-    score = serializers.IntegerField(min_value=1, max_value=10)
+    author = SlugRelatedField(slug_field='username', read_only=True,
+                              default=serializers.CurrentUserDefault())
+    score = serializers.IntegerField(max_value=10, min_value=1)
+    title = serializers.PrimaryKeyRelatedField(read_only=True,
+                                               default=Title.objects.first())
 
     class Meta:
         fields = '__all__'
         model = Review
-        validators = [
+        #read_only_fields = ('title', 'author')
+        '''validators = [
             UniqueTogetherValidator(
                 queryset=Review.objects.all(),
                 fields=('author', 'title'),
                 message='Вы уже оставляли отзыв на это произведение'
             )
-        ]
+        ]'''
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -96,3 +106,4 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Comment
+        read_only_fields = ('review',)
