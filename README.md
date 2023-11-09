@@ -1,8 +1,9 @@
-## Проект «API для Yatube»
+## Проект «YaMDb»
 
 ### Описание:
 
-Учебный проект для отработки на практике различных способов детальной настройки собственного API-сервиса.
+Проект YaMDb собирает отзывы пользователей на произведения. Сами произведения в YaMDb не хранятся, здесь нельзя посмотреть фильм или послушать музыку.
+Произведения делятся на категории, такие как «Книги», «Фильмы», «Музыка».
 
 ### Стек:
 
@@ -24,10 +25,6 @@ SQLite3 as database
 ```
 
 ```
-djoser 2.1 as library for authentication
-```
-
-```
 GitHub as repo and workflows manager
 ```
 
@@ -36,11 +33,12 @@ GitHub as repo and workflows manager
 Клонировать репозиторий и перейти в него в командной строке:
 
 ```
-git clone https://github.com/aleksey-vasilev/api_final_yatube
+git clone https://github.com/alexeont/api_yamdb
+
 ```
 
 ```
-cd api_final_yatube
+cd api_yamdb
 ```
 
 Cоздать и активировать виртуальное окружение:
@@ -75,50 +73,13 @@ python3 manage.py migrate
 python3 manage.py runserver
 ```
 
-### Примеры запросов:
+### Алгоритм регистрации пользователей
 
-#### Создание публикации:
+1. Пользователь отправляет POST-запрос на добавление нового пользователя с параметрами `email` и `username` на эндпоинт `/api/v1/auth/signup/`.
+2. **YaMDB** отправляет письмо с кодом подтверждения (`confirmation_code`) на адрес  `email`.
+3. Пользователь отправляет POST-запрос с параметрами `username` и `confirmation_code` на эндпоинт `/api/v1/auth/token/`, в ответе на запрос ему приходит `token` (JWT-токен).
+4. При желании пользователь отправляет PATCH-запрос на эндпоинт `/api/v1/users/me/` и заполняет поля в своём профайле (описание полей — в документации).
 
-```
-POST /api/v1/posts/
-```
-json
-{
+### Документация:
 
-    "text": "string",
-    "image": "string",
-    "group": 0
-
-}
-
-#### Пример ответа:
-
-json
-{
-
-    "id": 0,
-    "author": "string",
-    "text": "string",
-    "pub_date": "2019-08-24T14:15:22Z",
-    "image": "string",
-    "group": 0
-
-}
-
-#### Получение комментария:
-
-```
-GET /api/v1/posts/{post_id}/comments/{id}/
-```
-#### Пример ответа:
-
-json
-{
-
-    "id": 0,
-    "author": "string",
-    "text": "string",
-    "created": "2019-08-24T14:15:22Z",
-    "post": 0
-
-}
+Документация API доступна по адресу: http://127.0.0.1:8000/redoc/. 
