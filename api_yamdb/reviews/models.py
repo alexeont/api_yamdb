@@ -72,8 +72,7 @@ class TitleGenre(models.Model):
 class Review(BaseModel):
     """ Отзыв на тайтл. """
     title = models.ForeignKey(Title,
-                              on_delete=models.CASCADE,
-                              related_name='title')
+                              on_delete=models.CASCADE)
     score = models.PositiveSmallIntegerField()
     text = models.TextField(max_length=MAX_REVIEW_CHARACTERS)
 
