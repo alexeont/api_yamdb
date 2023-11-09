@@ -163,7 +163,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_serializer_class(self):
-        if self.action == 'create' or self.action == 'patch':
+        if self.action == 'create' or self.action == 'partial_update':
             return CreateTitleSerializer
         return DetailedTitleSerializer
 
