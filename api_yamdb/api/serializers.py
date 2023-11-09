@@ -80,8 +80,6 @@ class CreateTitleSerializer(serializers.ModelSerializer):
         read_only_fields = ('rating',)
 
 
-
-
 class ReviewSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(slug_field='username', read_only=True,
                               default=serializers.CurrentUserDefault())

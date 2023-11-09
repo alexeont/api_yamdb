@@ -146,15 +146,12 @@ class TitleViewSet(viewsets.ModelViewSet):
     permission_classes = (Admin | ReadOnly,)
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('category__slug', 'genre__slug', 'name', 'year')
+    http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_serializer_class(self):
         if self.action == 'create' or self.action == 'update':
             return CreateTitleSerializer
         return DetailedTitleSerializer
-
-    def update(self, request, *args, **kwargs):
-        return Response({'detail': 'Метод не разрешен'},
-                        status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
