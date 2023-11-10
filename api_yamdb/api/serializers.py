@@ -6,6 +6,8 @@ from users.models import User
 
 
 class RegisterSerializer(serializers.ModelSerializer):
+    '''Для классов Регистрации и Проверки токена не нужно общение с БД, нужно переопределить родительский класс.
+Так же смотри замечание в модели про валидацию и про длину полей, это касается всех сериалайзеров для Пользователя.'''
 
     class Meta:
         model = User
@@ -14,7 +16,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
 
     def validate(self, data):
-        if data.get('username') == 'me':
+        if data.get('username') == 'me': # Этого мало, нужна проверка на регулярку, см. в модели.
+                                         # Тоже самое для всех сериализаторов пользователя.
             raise serializers.ValidationError('Недопустимое имя пользователя')
         if User.objects.filter(email=data.get('email')):
             raise serializers.ValidationError('Такой e-mail уже есть')
@@ -86,6 +89,12 @@ class CreateTitleSerializer(serializers.ModelSerializer):
         model = Title
         fields = ('id', 'name', 'year', 'description', 'category', 'genre')
         read_only_fields = ('rating',)
+    
+    '''Так у нас вывод информации после Пост запроса будет не по ТЗ,
+    нужно добавить сюда метод который позволит выводить информацию как при гет запросе.
+    Не путаем нужно написать всего один метод.
+    Нужна валидация поля Жанра, у нас по ТЗ это поля обязательное, если сейчас
+    передать пустой список через Postman, то Произведение создастся вообще без Жанров'''
 
 
 class ReviewSerializer(serializers.ModelSerializer):

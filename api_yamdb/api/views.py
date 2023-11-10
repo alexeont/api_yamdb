@@ -27,18 +27,19 @@ from users.models import User
 ''' User Views. '''
 
 
-class RegisterViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+class RegisterViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):  # Избыточный родитель, тут хватит либо APIView либо вообще функции с декоратором @api_view.
+                                                                          # То же самое для класса получения токена.
     ''' Отправка письма с кодом регистрации для получения токена. '''
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = (permissions.AllowAny,)
 
     def create(self, request):
-        if not User.objects.filter(username=request.data.get('username'),
+        if not User.objects.filter(username=request.data.get('username'),  # Вся валидация должна быть в сериализаторе.
                                    email=request.data.get('email')).exists():
             serializer = RegisterSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
-            user = User.objects.create(**serializer.validated_data)
+            user = User.objects.create(**serializer.validated_data)  # Создавать пользователя лучше в сериализаторе в методе create
         else:
             user = User.objects.get(username=request.data.get('username'))
         confirmation_code = default_token_generator.make_token(user)
@@ -46,7 +47,7 @@ class RegisterViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
             subject='Ваш код регистрации',
             message=(f'Код регистрации для {request.data.get("username")}: '
                      f'{confirmation_code}'),
-                    from_email='domashkapraktikum@yandex.ru',
+                    from_email='domashkapraktikum@yandex.ru',  # Это есть в settings.
                     recipient_list=[request.data.get('email')],
                     fail_silently=True,)
         return Response(request.data, status=status.HTTP_200_OK)
@@ -71,7 +72,7 @@ class UserRecieveTokenViewSet(mixins.CreateModelMixin,
         return Response(message, status=status.HTTP_200_OK)
 
 
-class UserViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
+class UserViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,  # Тут нужен ModelViewSet, просто ограничить метод put в теле ViewSet.
                   viewsets.GenericViewSet):
     ''' Получение информации и измение данных пользователей. '''
     queryset = User.objects.all()
@@ -96,7 +97,7 @@ class UserViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
 
     @action(methods=['get', 'patch', 'delete'], detail=False,
             url_path=r'(?P<username>[\w.@+-]+)')
-    def get_user_by_username(self, request, username):
+    def get_user_by_username(self, request, username):  # Лишний метод, в полном ViewSet он будет не нужен.
         user = get_object_or_404(User, username=username)
         if request.method == 'PATCH':
             serializer = UserSerializer(user, data=request.data, partial=True)
@@ -142,6 +143,10 @@ class CategoryViewSet(generics.ListCreateAPIView):
 
 
 class CategoryDestroyViewSet(generics.DestroyAPIView):
+
+    '''По классам выше нужно создать свой ViewSet, нам нужно объединить 3 mixin - создание удаление и получение списка и GenericViewSet.
+В него убрать все строки кроме двух, тогда в жанрах и категории будет только по 2 строки и классов будет только 2.'''
+
     ''' Удаление категории. '''
     queryset = Category.objects.all()
     permission_classes = (Admin,)
@@ -151,6 +156,9 @@ class CategoryDestroyViewSet(generics.DestroyAPIView):
 
 
 class FilterBackend(BaseFilterBackend):
+
+    #  Фильтры нужно размещать в соответствующем файле и писать их на основе FilterSet.
+
     ''' Кастомный фильтр. '''
     def filter_queryset(self, request, queryset, view):
         genre = request.GET.get('genre')
@@ -165,14 +173,18 @@ class FilterBackend(BaseFilterBackend):
 class TitleViewSet(viewsets.ModelViewSet):
     ''' Получение списка всех объектов. '''
     queryset = Title.objects.all()
+    #  Тут и прикрутить аннотацию рейтинга по среднему значению score,
+    # тогда не нужны будет ни поля в модели, ни методы в сериализаторе,
+    # всего одна строка всё решит, тем более что и в запросах будет большой выигрыш.  
     permission_classes = (Admin | ReadOnly,)
-    filter_backends = (DjangoFilterBackend,
+    filter_backends = (DjangoFilterBackend,  # Нужно добавить бек сортировки, и ограничить её в теле Viewset
                        FilterBackend)
     filterset_fields = ('name', 'year')
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_serializer_class(self):
-        if self.action == 'create' or self.action == 'partial_update':
+        if self.action == 'create' or self.action == 'partial_update':  # Использовать проверку вхождения в кортеж.
+                                                                        # У нас разрешено удаление.
             return CreateTitleSerializer
         return DetailedTitleSerializer
 
