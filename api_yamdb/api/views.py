@@ -179,26 +179,9 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return self.get_title().reviews.all()
 
-    def update_title_rating(self, title):
-        reviews = self.get_queryset()
-        total_score = sum(review.score for review in reviews)
-        average_rating = total_score / reviews.count()
-        title.rating = round(average_rating, 1)
-        title.save()
-
     def perform_create(self, serializer):
         serializer.save(author=self.request.user,
                         title=self.get_title())
-
-    def perform_update(self, serializer):
-        serializer.save()
-        title = serializer.instance.title
-        self.update_title_rating(title)
-
-    def perform_destroy(self, instance):
-        title = instance.title
-        instance.delete()
-        self.update_title_rating(title)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -215,4 +198,3 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user,
                         review=self.get_review())
-

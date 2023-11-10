@@ -85,4 +85,3 @@ def import_data_from_csv():
                 pub_date=row['pub_date'],
                 author=User.objects.get(id=int(row['author'],))
             )
-
