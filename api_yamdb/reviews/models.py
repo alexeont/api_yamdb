@@ -16,6 +16,7 @@ class BaseModel(models.Model):
 
 
 class Genre(models.Model):
+    """ Жанры произведений. """
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 
@@ -27,6 +28,7 @@ class Genre(models.Model):
 
 
 class Category(models.Model):
+    """ Категории (типы) произведений. """
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 
@@ -38,6 +40,7 @@ class Category(models.Model):
 
 
 class Title(models.Model):
+    """ Произведения, к которым пишут отзывы. """
     name = models.CharField(max_length=256)
     year = models.IntegerField()
     rating = models.FloatField(null=True, blank=True)
@@ -58,10 +61,11 @@ class Title(models.Model):
         ordering = ('year',)
 
     def __str__(self):
-        self.genre[:TRUNCATED_MODEL_NAME]
+        self.name[:TRUNCATED_MODEL_NAME]
 
 
 class TitleGenre(models.Model):
+    """ Промежуточная таблица для связи произведений и жанров. """
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
@@ -81,7 +85,7 @@ class Review(BaseModel):
         ordering = ('pub_date',)
         constraints = [
             models.UniqueConstraint(
-                fields=['author', 'title'],
+                fields=['author_id', 'title_id'],
                 name='unique_review'
             )
         ]

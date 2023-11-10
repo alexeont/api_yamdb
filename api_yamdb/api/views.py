@@ -28,6 +28,7 @@ from users.models import User
 
 
 class RegisterViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
+    ''' Отправка письма с кодом регистрации для получения токена. '''
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = (permissions.AllowAny,)
@@ -53,6 +54,7 @@ class RegisterViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):
 
 class UserRecieveTokenViewSet(mixins.CreateModelMixin,
                               viewsets.GenericViewSet):
+    ''' Получение JWT-токена по коду подтверждения. '''
     queryset = User.objects.all()
     serializer_class = UserRecieveTokenSerializer
     permission_classes = (permissions.AllowAny,)
@@ -71,6 +73,7 @@ class UserRecieveTokenViewSet(mixins.CreateModelMixin,
 
 class UserViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
                   viewsets.GenericViewSet):
+    ''' Получение информации и измение данных пользователей. '''
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (Admin,)
@@ -111,6 +114,7 @@ class UserViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
 
 
 class GenreViewSet(generics.ListCreateAPIView):
+    ''' Получение списка жанров. '''
     queryset = Genre.objects.all()
     filter_backends = (filters.SearchFilter,)
     serializer_class = GenreSerializer
@@ -119,6 +123,7 @@ class GenreViewSet(generics.ListCreateAPIView):
 
 
 class GenreDestroyViewSet(generics.DestroyAPIView):
+    ''' Удаление жанра. '''
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
     permission_classes = (Admin, )
@@ -128,6 +133,7 @@ class GenreDestroyViewSet(generics.DestroyAPIView):
 
 
 class CategoryViewSet(generics.ListCreateAPIView):
+    ''' Получение списка категорий. '''
     queryset = Category.objects.all()
     filter_backends = (filters.SearchFilter,)
     serializer_class = CategorySerializer
@@ -136,6 +142,7 @@ class CategoryViewSet(generics.ListCreateAPIView):
 
 
 class CategoryDestroyViewSet(generics.DestroyAPIView):
+    ''' Удаление категории. '''
     queryset = Category.objects.all()
     permission_classes = (Admin,)
 
@@ -144,6 +151,7 @@ class CategoryDestroyViewSet(generics.DestroyAPIView):
 
 
 class FilterBackend(BaseFilterBackend):
+    ''' Кастомный фильтр. '''
     def filter_queryset(self, request, queryset, view):
         genre = request.GET.get('genre')
         category = request.GET.get('category')
@@ -155,6 +163,7 @@ class FilterBackend(BaseFilterBackend):
 
 
 class TitleViewSet(viewsets.ModelViewSet):
+    ''' Получение списка всех объектов. '''
     queryset = Title.objects.all()
     permission_classes = (Admin | ReadOnly,)
     filter_backends = (DjangoFilterBackend,
@@ -169,6 +178,7 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
+    ''' Работа с отзывами на произведения. '''
     serializer_class = ReviewSerializer
     permission_classes = (IsAuthorOrReadOnly | Admin | Moderator,)
     http_method_names = ('get', 'post', 'patch', 'delete')
@@ -179,29 +189,13 @@ class ReviewViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return self.get_title().reviews.all()
 
-    def update_title_rating(self, title):
-        reviews = self.get_queryset()
-        total_score = sum(review.score for review in reviews)
-        average_rating = total_score / reviews.count()
-        title.rating = round(average_rating, 1)
-        title.save()
-
     def perform_create(self, serializer):
         serializer.save(author=self.request.user,
                         title=self.get_title())
 
-    def perform_update(self, serializer):
-        serializer.save()
-        title = serializer.instance.title
-        self.update_title_rating(title)
-
-    def perform_destroy(self, instance):
-        title = instance.title
-        instance.delete()
-        self.update_title_rating(title)
-
 
 class CommentViewSet(viewsets.ModelViewSet):
+    ''' Работа с комментариями. '''
     serializer_class = CommentSerializer
     permission_classes = (IsAuthorOrReadOnly | Admin | Moderator,)
     http_method_names = ('get', 'post', 'patch', 'delete')
@@ -215,4 +209,3 @@ class CommentViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user,
                         review=self.get_review())
-
