@@ -58,7 +58,7 @@ class Title(models.Model):
         ordering = ('year',)
 
     def __str__(self):
-        self.genre[:TRUNCATED_MODEL_NAME]
+        self.name[:TRUNCATED_MODEL_NAME]
 
 
 class TitleGenre(models.Model):
@@ -81,7 +81,7 @@ class Review(BaseModel):
         ordering = ('pub_date',)
         constraints = [
             models.UniqueConstraint(
-                fields=['author', 'title'],
+                fields=['author_id', 'title_id'],
                 name='unique_review'
             )
         ]
