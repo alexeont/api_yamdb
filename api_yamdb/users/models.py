@@ -18,7 +18,7 @@ def validate_username(value):
 
 
 class User(AbstractUser):
-
+    """ Класс пользователей. """
     username = models.CharField(
         'Логин',
         max_length=150,

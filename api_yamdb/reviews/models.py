@@ -16,6 +16,7 @@ class BaseModel(models.Model):
 
 
 class Genre(models.Model):
+    """ Жанры произведений. """
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 
@@ -27,6 +28,7 @@ class Genre(models.Model):
 
 
 class Category(models.Model):
+    """ Категории (типы) произведений. """
     name = models.CharField(max_length=256)
     slug = models.SlugField(max_length=50, unique=True)
 
@@ -38,6 +40,7 @@ class Category(models.Model):
 
 
 class Title(models.Model):
+    """ Произведения, к которым пишут отзывы. """
     name = models.CharField(max_length=256)
     year = models.IntegerField()
     rating = models.FloatField(null=True, blank=True)
@@ -62,6 +65,7 @@ class Title(models.Model):
 
 
 class TitleGenre(models.Model):
+    """ Промежуточная таблица для связи произведений и жанров. """
     title = models.ForeignKey(Title, on_delete=models.CASCADE)
     genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
 
