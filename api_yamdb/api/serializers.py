@@ -87,14 +87,25 @@ class CreateTitleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'description', 'category', 'genre')
+        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
         read_only_fields = ('rating',)
-    
+
+    def validate(self, data):
+        if not data.get('genre'):
+            raise serializers.ValidationError('Жанры обязательны')
+        return data
+
+    def to_representation(self, instance):
+        serializer = DetailedTitleSerializer(instance)
+        return serializer.data
+
     '''Так у нас вывод информации после Пост запроса будет не по ТЗ,
     нужно добавить сюда метод который позволит выводить информацию как при гет запросе.
     Не путаем нужно написать всего один метод.
+    СДЕЛАНО
     Нужна валидация поля Жанра, у нас по ТЗ это поля обязательное, если сейчас
-    передать пустой список через Postman, то Произведение создастся вообще без Жанров'''
+    передать пустой список через Postman, то Произведение создастся вообще без Жанров
+    СДЕЛАНО '''
 
 
 class ReviewSerializer(serializers.ModelSerializer):

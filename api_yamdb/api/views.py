@@ -176,7 +176,7 @@ class TitleViewSet(viewsets.ModelViewSet):
     #  Тут и прикрутить аннотацию рейтинга по среднему значению score,
     # тогда не нужны будет ни поля в модели, ни методы в сериализаторе,
     # всего одна строка всё решит, тем более что и в запросах будет большой выигрыш.  
-    permission_classes = (Admin | ReadOnly,)
+    # permission_classes = (Admin | ReadOnly,)
     filter_backends = (DjangoFilterBackend,  # Нужно добавить бек сортировки, и ограничить её в теле Viewset
                        FilterBackend)
     filterset_fields = ('name', 'year')
