@@ -51,9 +51,6 @@ class Title(models.Model):
     name = models.CharField(max_length=256,
                             verbose_name='Название произведения')
     year = models.IntegerField(verbose_name='Год')
-    rating = models.FloatField(null=True,
-                               blank=True,
-                               verbose_name='Рейтинг')
     description = models.TextField(blank=True,
                                    null=True,
                                    verbose_name='Описание')

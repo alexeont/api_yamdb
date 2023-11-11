@@ -1,4 +1,6 @@
 from django.core.mail import send_mail
+from django.db.models import Avg
+from rest_framework.filters import OrderingFilter
 from django.shortcuts import get_object_or_404
 from rest_framework import (filters, generics, mixins, permissions,
                             status, viewsets)
@@ -7,10 +9,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Q
-from rest_framework.filters import BaseFilterBackend
 
 from .permissions import Admin, IsAuthorOrReadOnly, Moderator, ReadOnly
+from .filters import CustomFilter
 from .serializers import (CategorySerializer,
                           CommentSerializer,
                           GenreSerializer,
@@ -114,77 +115,46 @@ class UserViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,  # Тут ну
 ''' Core Views. '''
 
 
-class GenreViewSet(generics.ListCreateAPIView):
-    ''' Получение списка жанров. '''
+class GenreViewSet(mixins.ListModelMixin,
+                   mixins.CreateModelMixin,
+                   mixins.DestroyModelMixin,
+                   viewsets.GenericViewSet):
+    ''' Получение списка, создание и удаление жанров. '''
+
     queryset = Genre.objects.all()
     filter_backends = (filters.SearchFilter,)
     serializer_class = GenreSerializer
     permission_classes = (Admin | ReadOnly,)
     search_fields = ('name',)
+    lookup_field = 'slug'
 
 
-class GenreDestroyViewSet(generics.DestroyAPIView):
-    ''' Удаление жанра. '''
-    queryset = Genre.objects.all()
-    serializer_class = GenreSerializer
-    permission_classes = (Admin, )
+class CategoryViewSet(mixins.ListModelMixin,
+                      mixins.CreateModelMixin,
+                      mixins.DestroyModelMixin,
+                      viewsets.GenericViewSet):
+    ''' Получение списка, создание и удаление жанров. '''
 
-    def get_object(self):
-        return Genre.objects.get(slug=self.kwargs.get('genre_slug'))
-
-
-class CategoryViewSet(generics.ListCreateAPIView):
-    ''' Получение списка категорий. '''
     queryset = Category.objects.all()
     filter_backends = (filters.SearchFilter,)
     serializer_class = CategorySerializer
     permission_classes = (Admin | ReadOnly,)
     search_fields = ('name',)
-
-
-class CategoryDestroyViewSet(generics.DestroyAPIView):
-
-    '''По классам выше нужно создать свой ViewSet, нам нужно объединить 3 mixin - создание удаление и получение списка и GenericViewSet.
-В него убрать все строки кроме двух, тогда в жанрах и категории будет только по 2 строки и классов будет только 2.'''
-
-    ''' Удаление категории. '''
-    queryset = Category.objects.all()
-    permission_classes = (Admin,)
-
-    def get_object(self):
-        return Category.objects.get(slug=self.kwargs.get('category_slug'))
-
-
-class FilterBackend(BaseFilterBackend):
-
-    #  Фильтры нужно размещать в соответствующем файле и писать их на основе FilterSet.
-
-    ''' Кастомный фильтр. '''
-    def filter_queryset(self, request, queryset, view):
-        genre = request.GET.get('genre')
-        category = request.GET.get('category')
-        if genre:
-            return queryset.filter(Q(genre__slug=genre))
-        if category:
-            queryset = queryset.filter(Q(category__slug=category))
-        return queryset
+    lookup_field = 'slug'
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     ''' Получение списка всех объектов. '''
-    queryset = Title.objects.all()
-    #  Тут и прикрутить аннотацию рейтинга по среднему значению score,
-    # тогда не нужны будет ни поля в модели, ни методы в сериализаторе,
-    # всего одна строка всё решит, тем более что и в запросах будет большой выигрыш.  
+    queryset = Title.objects.annotate(
+        rating_avg=Avg('reviews__score')
+    ).order_by('id')
     permission_classes = (Admin | ReadOnly,)
-    filter_backends = (DjangoFilterBackend,  # Нужно добавить бек сортировки, и ограничить её в теле Viewset
-                       FilterBackend)
-    filterset_fields = ('name', 'year')
+    filter_backends = (DjangoFilterBackend, OrderingFilter)
+    filterset_class = CustomFilter
     http_method_names = ('get', 'post', 'patch', 'delete')
 
     def get_serializer_class(self):
-        if self.action == 'create' or self.action == 'partial_update':  # Использовать проверку вхождения в кортеж.
-                                                                        # У нас разрешено удаление.
+        if self.action in ('create', 'partial_update', 'delete'):
             return CreateTitleSerializer
         return DetailedTitleSerializer
 

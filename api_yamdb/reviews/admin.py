@@ -8,7 +8,7 @@ class GenreItemTabular(admin.TabularInline):
 
 class TitleAdmin(admin.ModelAdmin):
     list_display = ['id', 'name',
-                    'year', 'rating',
+                    'year',
                     'description', 'category',]
     list_filter = ['category__name']
     inlines = [
