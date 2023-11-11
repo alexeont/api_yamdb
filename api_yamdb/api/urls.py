@@ -5,9 +5,7 @@ from .views import (
     CommentViewSet,
     TitleViewSet,
     GenreViewSet,
-    GenreDestroyViewSet,
     CategoryViewSet,
-    CategoryDestroyViewSet,
     RegisterViewSet,
     ReviewViewSet,
     UserRecieveTokenViewSet,
@@ -15,7 +13,7 @@ from .views import (
 )
 
 s_router_v1 = SimpleRouter()
-s_router_v1.register(r'titles', TitleViewSet)  # Full
+s_router_v1.register(r'titles', TitleViewSet, basename='titles')
 s_router_v1.register(r'users', UserViewSet, basename='users')
 s_router_v1.register(
     r'titles/(?P<title_id>\d+)/reviews',
@@ -27,19 +25,17 @@ s_router_v1.register(
     CommentViewSet,
     basename='comments'
 )
+s_router_v1.register(r'genres', GenreViewSet, basename='genres')     # Change when views are ready
+s_router_v1.register(r'categories', CategoryViewSet, basename='categories')  # Change when views are ready
+
+auth_urls = [
+    path('signup/', RegisterViewSet.as_view({'post': 'create'}),
+         name='signup'),
+    path('token/', UserRecieveTokenViewSet.as_view({'post': 'create'}),
+         name='token'),
+]
 
 urlpatterns = [
-    path('v1/genres/',
-         GenreViewSet.as_view()),
-    path('v1/categories/',
-         CategoryViewSet.as_view()),
-    path('v1/genres/<slug:genre_slug>/',
-         GenreDestroyViewSet.as_view()),
-    path('v1/categories/<slug:category_slug>/',
-         CategoryDestroyViewSet.as_view()),
-    path('v1/auth/signup/', RegisterViewSet.as_view({'post': 'create'}),
-         name='signup'),
-    path('v1/auth/token/', UserRecieveTokenViewSet.as_view({'post': 'create'}),
-         name='token'),
+    path('v1/auth/', include(auth_urls)),
     path('v1/', include(s_router_v1.urls)),
 ]
