@@ -90,10 +90,10 @@ class CreateTitleSerializer(serializers.ModelSerializer):
         fields = ('id', 'name', 'year', 'description', 'genre', 'category')
         read_only_fields = ('rating',)
 
-    def validate(self, data):
-        if not data.get('genre'):
-            raise serializers.ValidationError('Жанры обязательны')
-        return data
+    def validate_genre(self, value):
+        if not value:
+            raise serializers.ValidationError("Genre list cannot be empty.")
+        return value
 
     def to_representation(self, instance):
         serializer = DetailedTitleSerializer(instance)
