@@ -9,7 +9,7 @@ class GenreItemTabular(admin.TabularInline):
 class TitleAdmin(admin.ModelAdmin):
     list_display = ['id', 'name',
                     'year',
-                    'description', 'category',]
+                    'description', 'category']
     list_filter = ['category__name']
     inlines = [
         GenreItemTabular,

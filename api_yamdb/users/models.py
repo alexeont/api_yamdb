@@ -20,7 +20,7 @@ class User(AbstractUser):
         unique=True,
         help_text=('Обязательное поле. Не более 150 символов. '
                    'Только буквы и цифры, символы @+-'),
-        validators=[validator_username,],
+        validators=[validator_username, ],
         error_messages={
             'unique': 'Пользователь с таким именем уже есть',
         }
