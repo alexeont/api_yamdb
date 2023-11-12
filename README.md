@@ -88,4 +88,11 @@ python3 manage.py runserver
 
 ### Документация:
 
-Документация API доступна по адресу: http://127.0.0.1:8000/redoc/. 
+Документация API доступна по адресу: http://127.0.0.1:8000/redoc/.
+
+### Создатели:
+
+Алексей Васильев (users)
+Александр Платошин (Title, Category, Genre, Rating, import_data)
+Александр Леонтьев (teamlead) (Review, Comment, Models)
+
