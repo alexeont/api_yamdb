@@ -112,7 +112,8 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         fields = '__all__'
         model = Review
-        extra_kwargs = { # Так может не сработать
+        read_only_fields = ('title',)
+        extra_kwargs = {
             'score':
             {'error_messages':
                 {'max_value': ('Нельзя поставить больше десятки'),
@@ -128,7 +129,7 @@ class ReviewSerializer(serializers.ModelSerializer):
             if review.exists():
                 raise serializers.ValidationError(
                     'Неуникальная пара Автор-Отзыв')
-            return data
+        return data
 
 
 class CommentSerializer(serializers.ModelSerializer):

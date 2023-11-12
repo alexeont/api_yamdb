@@ -4,11 +4,12 @@ from .constants import (MAX_NAME_CHARS,
                         MAX_SLUG_CHARS,
                         TRUNCATED_MODEL_NAME,)
 from users.models import User
+from .validators import validate_year
 
 
 class NameSlugModel(models.Model):
     """ Базовый класс для Жанра и Категории. """
-    
+
     name = models.CharField('Название',
                             max_length=MAX_NAME_CHARS)
     slug = models.SlugField('Слаг',
@@ -25,7 +26,7 @@ class NameSlugModel(models.Model):
 
 class AuthorTextPubdateModel(models.Model):
     """ Базовый класс для Ревью и Коммента. """
-    
+
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
     author = models.ForeignKey(User,
                                on_delete=models.CASCADE,
@@ -45,8 +46,7 @@ class Genre(NameSlugModel):
 
     class Meta(NameSlugModel.Meta):
         verbose_name = 'жанр'
-        verbose_name_plural = 'Жанры' 
-
+        verbose_name_plural = 'Жанры'
 
 
 class Category(NameSlugModel):
@@ -54,16 +54,16 @@ class Category(NameSlugModel):
 
     class Meta(NameSlugModel.Meta):
         verbose_name = 'категория'
-        verbose_name_plural = 'Категории' 
-
+        verbose_name_plural = 'Категории'
 
 
 class Title(models.Model):
     """ Произведения, к которым пишут отзывы. """
-    
+
     name = models.CharField('Название произведения',
                             max_length=MAX_NAME_CHARS)
-    year = models.SmallIntegerField('Год')
+    year = models.SmallIntegerField('Год', db_index=True,
+                                    validators=[validate_year])
     description = models.TextField('Описание', blank=True, null=True)
     genre = models.ManyToManyField(
         Genre,
@@ -85,7 +85,7 @@ class Title(models.Model):
     class Meta:
         ordering = ('year',)
         verbose_name = 'произведение'
-        verbose_name_plural = 'Произведения' 
+        verbose_name_plural = 'Произведения'
 
     def __str__(self):
         self.name[:TRUNCATED_MODEL_NAME]
@@ -93,7 +93,7 @@ class Title(models.Model):
 
 class TitleGenre(models.Model):
     """ Промежуточная таблица для связи произведений и жанров. """
-    
+
     title = models.ForeignKey(Title,
                               on_delete=models.CASCADE,
                               verbose_name='Название произведения')
@@ -107,12 +107,11 @@ class TitleGenre(models.Model):
 
 class Review(AuthorTextPubdateModel):
     """ Отзыв на Тайтл. """
-    
+
     title = models.ForeignKey(Title,
                               on_delete=models.CASCADE,
                               verbose_name='Отзыв на: ')
     score = models.PositiveSmallIntegerField('Оценка')
-
 
     class Meta(AuthorTextPubdateModel.Meta):
         default_related_name = 'reviews'
@@ -128,7 +127,7 @@ class Review(AuthorTextPubdateModel):
 
 class Comment(AuthorTextPubdateModel):
     """ Комментарий на отзыв. """
-    
+
     review = models.ForeignKey(Review,
                                on_delete=models.CASCADE,
                                verbose_name='Комментарий к: ')

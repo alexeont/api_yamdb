@@ -30,7 +30,8 @@ from users.models import User
 
 
 class UserRegisterApiView(APIView):
-    ''' Получение кода регистрации для получения токена. '''
+    """ Получение кода регистрации для получения токена. """
+
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = (permissions.AllowAny,)
@@ -44,7 +45,8 @@ class UserRegisterApiView(APIView):
 
 
 class UserRecieveTokenApiView(APIView):
-    ''' Получение JWT-токена по коду подтверждения. '''
+    """ Получение JWT-токена по коду подтверждения. """
+
     queryset = User.objects.all()
     serializer_class = UserRecieveTokenSerializer
     permission_classes = (permissions.AllowAny,)
@@ -62,7 +64,8 @@ class UserRecieveTokenApiView(APIView):
 
 
 class UserViewSet(ModelViewSet):
-    ''' Получение информации и измение данных пользователей. '''
+    """ Получение информации и измение данных пользователей. """
+
     lookup_field = 'username'
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -107,7 +110,7 @@ class CategoryViewSet(mixins.ListModelMixin,
                       mixins.CreateModelMixin,
                       mixins.DestroyModelMixin,
                       viewsets.GenericViewSet):
-    ''' Получение списка, создание и удаление жанров. '''
+    """ Получение списка, создание и удаление категорий. """
 
     queryset = Category.objects.all()
     filter_backends = (filters.SearchFilter,)
@@ -118,7 +121,8 @@ class CategoryViewSet(mixins.ListModelMixin,
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    ''' Получение списка всех объектов. '''
+    """ Получение списка всех объектов. """
+
     queryset = Title.objects.annotate(
         rating_avg=Avg('reviews__score')
     ).order_by('id')
@@ -134,7 +138,8 @@ class TitleViewSet(viewsets.ModelViewSet):
 
 
 class ReviewViewSet(viewsets.ModelViewSet):
-    ''' Работа с отзывами на произведения. '''
+    """ Работа с отзывами на произведения. """
+
     serializer_class = ReviewSerializer
     permission_classes = (IsAuthorOrReadOnly | Admin | Moderator,)
     http_method_names = ('get', 'post', 'patch', 'delete')
@@ -151,7 +156,8 @@ class ReviewViewSet(viewsets.ModelViewSet):
 
 
 class CommentViewSet(viewsets.ModelViewSet):
-    ''' Работа с комментариями. '''
+    """ Работа с комментариями. """
+
     serializer_class = CommentSerializer
     permission_classes = (IsAuthorOrReadOnly | Admin | Moderator,)
     http_method_names = ('get', 'post', 'patch', 'delete')
