@@ -1,7 +1,7 @@
 from django.db.models import Avg
 from rest_framework.filters import OrderingFilter
 from django.shortcuts import get_object_or_404
-from rest_framework import (filters, generics, permissions,
+from rest_framework import (filters, mixins, permissions,
                             status, viewsets)
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.decorators import action
@@ -10,7 +10,6 @@ from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
-
 
 from .permissions import Admin, IsAuthorOrReadOnly, Moderator, ReadOnly
 from .filters import CustomFilter
