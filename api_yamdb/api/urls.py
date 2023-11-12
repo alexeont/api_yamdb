@@ -13,7 +13,7 @@ from .views import (
 )
 
 s_router_v1 = SimpleRouter()
-s_router_v1.register(r'titles', TitleViewSet)
+s_router_v1.register(r'titles', TitleViewSet, basename='titles')
 s_router_v1.register(r'users', UserViewSet, basename='users')
 s_router_v1.register(
     r'titles/(?P<title_id>\d+)/reviews',
@@ -25,20 +25,17 @@ s_router_v1.register(
     CommentViewSet,
     basename='comments'
 )
-s_router_v1.register(
-    r'genres',
-    GenreViewSet
-)
-s_router_v1.register(
-    r'categories',
-    CategoryViewSet,
-    basename='categories'
-)
+s_router_v1.register(r'genres', GenreViewSet, basename='genres')
+s_router_v1.register(r'categories', CategoryViewSet, basename='categories')
+
+auth_urls = [
+    path('signup/', UserRegisterApiView.as_view(),
+         name='signup'),
+    path('token/', UserRecieveTokenApiView.as_view(),
+         name='token'),
+]
 
 urlpatterns = [
-    path('v1/auth/signup/', UserRegisterApiView.as_view(),
-         name='signup'),
-    path('v1/auth/token/', UserRecieveTokenApiView.as_view(),
-         name='token'),
+    path('v1/auth/', include(auth_urls)),
     path('v1/', include(s_router_v1.urls)),
 ]

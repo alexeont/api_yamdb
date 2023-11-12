@@ -5,6 +5,7 @@ from django.contrib.auth.tokens import default_token_generator
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
+from reviews.constants import MIN_SCORE_VALUE, MAX_SCORE_VALUE
 from reviews.models import Category, Comment, Genre, Review, Title
 from reviews.constants import (MAX_USERNAME_CHARACTERS, MAX_EMAIL_CHARACTERS,
                                MAX_CODE_CHARACTERS)
@@ -105,22 +106,29 @@ class CreateTitleSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     author = SlugRelatedField(slug_field='username', read_only=True,
                               default=serializers.CurrentUserDefault())
-    score = serializers.IntegerField(max_value=10, min_value=1)
-    title = serializers.PrimaryKeyRelatedField(queryset=Title.objects.all(),
-                                               default=None)
+    score = serializers.IntegerField(max_value=MAX_SCORE_VALUE,
+                                     min_value=MIN_SCORE_VALUE)
 
     class Meta:
         fields = '__all__'
         model = Review
+        extra_kwargs = { # Так может не сработать
+            'score':
+            {'error_messages':
+                {'max_value': ('Нельзя поставить больше десятки'),
+                 'min_value': ('Нельзя поставить меньше единицы')}}
+        }
 
     def validate(self, data):
-        author_id = self.context['request'].user.id
-        title_id = self.context['view'].kwargs.get('title_id')
-        review = Review.objects.filter(author_id=author_id, title_id=title_id)
-        if self.context['request'].method == 'POST' and review.exists():
-            raise serializers.ValidationError(
-                'Неуникальная пара Автор-Отзыв')
-        return data
+        if self.context['request'].method == 'POST':
+            author_id = self.context['request'].user.id
+            title_id = self.context['view'].kwargs.get('title_id')
+            review = Review.objects.filter(author_id=author_id,
+                                           title_id=title_id)
+            if review.exists():
+                raise serializers.ValidationError(
+                    'Неуникальная пара Автор-Отзыв')
+            return data
 
 
 class CommentSerializer(serializers.ModelSerializer):

@@ -1,71 +1,82 @@
 from django.db import models
 
-from .constants import (MAX_REVIEW_CHARACTERS,
-                        MAX_COMMENT_CHARACTERS,
-                        TRUNCATED_MODEL_NAME)
+from .constants import (MAX_NAME_CHARS,
+                        MAX_SLUG_CHARS,
+                        TRUNCATED_MODEL_NAME,)
 from users.models import User
 
 
-class BaseModel(models.Model):
-    """ Базовый класс для Ревью и Коммента. """
-    pub_date = models.DateTimeField('Дата публикации',
-                                    auto_now_add=True)
-    author = models.ForeignKey(User,
-                               on_delete=models.CASCADE,
-                               verbose_name='Автор')
+class NameSlugModel(models.Model):
+    """ Базовый класс для Жанра и Категории. """
+    
+    name = models.CharField('Название',
+                            max_length=MAX_NAME_CHARS)
+    slug = models.SlugField('Слаг',
+                            max_length=MAX_SLUG_CHARS,
+                            unique=True)
 
     class Meta:
         abstract = True
+        ordering = ('name',)
+
+    def __str__(self):
+        return self.name[:TRUNCATED_MODEL_NAME]
 
 
-class Genre(models.Model):
+class AuthorTextPubdateModel(models.Model):
+    """ Базовый класс для Ревью и Коммента. """
+    
+    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
+    author = models.ForeignKey(User,
+                               on_delete=models.CASCADE,
+                               verbose_name='Автор')
+    text = models.TextField('Текст')
+
+    class Meta:
+        abstract = True
+        ordering = ('pub_date',)
+
+    def __str__(self):
+        return self.text[:TRUNCATED_MODEL_NAME]
+
+
+class Genre(NameSlugModel):
     """ Жанры произведений. """
-    name = models.CharField(max_length=256, verbose_name='Навзание')
-    slug = models.SlugField(max_length=50, unique=True)
 
-    def __str__(self):
-        return self.name[:TRUNCATED_MODEL_NAME]
-
-    class Meta:
-        ordering = ('name',)
-        verbose_name = 'Жанр'
-        verbose_name_plural = 'Жанры'
+    class Meta(NameSlugModel.Meta):
+        verbose_name = 'жанр'
+        verbose_name_plural = 'Жанры' 
 
 
-class Category(models.Model):
+
+class Category(NameSlugModel):
     """ Категории (типы) произведений. """
-    name = models.CharField(max_length=256, verbose_name='Название')
-    slug = models.SlugField(max_length=50, unique=True)
 
-    def __str__(self):
-        return self.name[:TRUNCATED_MODEL_NAME]
+    class Meta(NameSlugModel.Meta):
+        verbose_name = 'категория'
+        verbose_name_plural = 'Категории' 
 
-    class Meta:
-        ordering = ('name',)
-        verbose_name = 'Категория'
-        verbose_name_plural = 'Категории'
 
 
 class Title(models.Model):
     """ Произведения, к которым пишут отзывы. """
-    name = models.CharField(max_length=256,
-                            verbose_name='Название произведения')
-    year = models.IntegerField(verbose_name='Год')
-    description = models.TextField(blank=True,
-                                   null=True,
-                                   verbose_name='Описание')
+    
+    name = models.CharField('Название произведения',
+                            max_length=MAX_NAME_CHARS)
+    year = models.SmallIntegerField('Год')
+    description = models.TextField('Описание', blank=True, null=True)
     genre = models.ManyToManyField(
         Genre,
         through='TitleGenre',
         related_name='title_genre',
-        verbose_name='Жанры'
+        verbose_name='Жанр'
     )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         related_name='title_category',
         null=True,
-        verbose_name='Категории'
+        verbose_name='Категория'
     )
 
     def __str__(self):
@@ -73,32 +84,39 @@ class Title(models.Model):
 
     class Meta:
         ordering = ('year',)
-        verbose_name = 'Приозведение'
-        verbose_name_plural = 'Произведения'
+        verbose_name = 'произведение'
+        verbose_name_plural = 'Произведения' 
+
+    def __str__(self):
+        self.name[:TRUNCATED_MODEL_NAME]
 
 
 class TitleGenre(models.Model):
     """ Промежуточная таблица для связи произведений и жанров. """
-    title = models.ForeignKey(Title, on_delete=models.CASCADE)
-    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+    
+    title = models.ForeignKey(Title,
+                              on_delete=models.CASCADE,
+                              verbose_name='Название произведения')
+    genre = models.ForeignKey(Genre,
+                              on_delete=models.CASCADE,
+                              verbose_name='Жанр')
 
     def __str__(self):
         return f'{self.title} {self.genre}'
 
 
-class Review(BaseModel):
-    """ Отзыв на тайтл. """
+class Review(AuthorTextPubdateModel):
+    """ Отзыв на Тайтл. """
+    
     title = models.ForeignKey(Title,
                               on_delete=models.CASCADE,
-                              verbose_name='Название')
-    score = models.PositiveSmallIntegerField(verbose_name='Оценка')
-    text = models.TextField(max_length=MAX_REVIEW_CHARACTERS,
-                            verbose_name='Текст отзыва')
+                              verbose_name='Отзыв на: ')
+    score = models.PositiveSmallIntegerField('Оценка')
 
-    class Meta:
+
+    class Meta(AuthorTextPubdateModel.Meta):
         default_related_name = 'reviews'
-        ordering = ('pub_date',)
-        verbose_name = 'Отзыв'
+        verbose_name = 'отзыв'
         verbose_name_plural = 'Отзывы'
         constraints = [
             models.UniqueConstraint(
@@ -107,18 +125,15 @@ class Review(BaseModel):
             )
         ]
 
-    def __str__(self):
-        return self.text[:TRUNCATED_MODEL_NAME]
 
-
-class Comment(BaseModel):
+class Comment(AuthorTextPubdateModel):
     """ Комментарий на отзыв. """
-    review = models.ForeignKey(Review, on_delete=models.CASCADE)
-    text = models.TextField(max_length=MAX_COMMENT_CHARACTERS)
+    
+    review = models.ForeignKey(Review,
+                               on_delete=models.CASCADE,
+                               verbose_name='Комментарий к: ')
 
-    class Meta:
+    class Meta(AuthorTextPubdateModel.Meta):
         default_related_name = 'comments'
-        ordering = ('pub_date',)
-
-    def __str__(self):
-        return self.text[:TRUNCATED_MODEL_NAME]
+        verbose_name = 'комментарий'
+        verbose_name_plural = 'Комментарии'
