@@ -100,9 +100,7 @@ class CreateTitleSerializer(serializers.ModelSerializer):
         return value
 
     def to_representation(self, instance):
-        serializer = DetailedTitleSerializer(instance) # Лишняя переменная, потому что одноразовая,
-                                                       # можно сразу возвращать(печатать) результат.
-        return serializer.data
+        return DetailedTitleSerializer(instance).data
 
 
 class ReviewSerializer(serializers.ModelSerializer):
