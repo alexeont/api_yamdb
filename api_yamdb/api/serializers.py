@@ -72,19 +72,13 @@ class CategorySerializer(serializers.ModelSerializer):
 class DetailedTitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.FloatField(source='rating_avg',
+                                    read_only=True)
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'rating',
-                  'description', 'category', 'genre')
-
-    def get_rating(self, obj):
-        reviews = Review.objects.filter(title=obj.id)
-        if reviews:
-            total_score = sum(review.score for review in reviews)
-            return total_score / len(reviews)
-        return None
+        fields = ('id', 'name', 'year',
+                  'description', 'rating', 'category', 'genre')
 
 
 class CreateTitleSerializer(serializers.ModelSerializer):
@@ -96,14 +90,16 @@ class CreateTitleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'description', 'category', 'genre')
-        read_only_fields = ('rating',)
-    
-    '''Так у нас вывод информации после Пост запроса будет не по ТЗ,
-    нужно добавить сюда метод который позволит выводить информацию как при гет запросе.
-    Не путаем нужно написать всего один метод.
-    Нужна валидация поля Жанра, у нас по ТЗ это поля обязательное, если сейчас
-    передать пустой список через Postman, то Произведение создастся вообще без Жанров'''
+        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
+
+    def validate_genre(self, value):
+        if not value:
+            raise serializers.ValidationError("Genre list cannot be empty.")
+        return value
+
+    def to_representation(self, instance):
+        serializer = DetailedTitleSerializer(instance)
+        return serializer.data
 
 
 class ReviewSerializer(serializers.ModelSerializer):

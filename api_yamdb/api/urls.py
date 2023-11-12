@@ -5,9 +5,7 @@ from .views import (
     CommentViewSet,
     TitleViewSet,
     GenreViewSet,
-    GenreDestroyViewSet,
     CategoryViewSet,
-    CategoryDestroyViewSet,
     UserRegisterApiView,
     ReviewViewSet,
     UserRecieveTokenApiView,
@@ -15,7 +13,7 @@ from .views import (
 )
 
 s_router_v1 = SimpleRouter()
-s_router_v1.register(r'titles', TitleViewSet)  # Full
+s_router_v1.register(r'titles', TitleViewSet)
 s_router_v1.register(r'users', UserViewSet, basename='users')
 s_router_v1.register(
     r'titles/(?P<title_id>\d+)/reviews',
@@ -27,16 +25,17 @@ s_router_v1.register(
     CommentViewSet,
     basename='comments'
 )
+s_router_v1.register(
+    r'genres',
+    GenreViewSet
+)
+s_router_v1.register(
+    r'categories',
+    CategoryViewSet,
+    basename='categories'
+)
 
 urlpatterns = [
-    path('v1/genres/',
-         GenreViewSet.as_view()),
-    path('v1/categories/',
-         CategoryViewSet.as_view()),
-    path('v1/genres/<slug:genre_slug>/',
-         GenreDestroyViewSet.as_view()),
-    path('v1/categories/<slug:category_slug>/',
-         CategoryDestroyViewSet.as_view()),
     path('v1/auth/signup/', UserRegisterApiView.as_view(),
          name='signup'),
     path('v1/auth/token/', UserRecieveTokenApiView.as_view(),

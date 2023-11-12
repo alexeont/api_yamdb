@@ -8,8 +8,11 @@ from users.models import User
 
 class BaseModel(models.Model):
     """ Базовый класс для Ревью и Коммента. """
-    pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    pub_date = models.DateTimeField('Дата публикации',
+                                    auto_now_add=True)
+    author = models.ForeignKey(User,
+                               on_delete=models.CASCADE,
+                               verbose_name='Автор')
 
     class Meta:
         abstract = True
@@ -17,7 +20,7 @@ class BaseModel(models.Model):
 
 class Genre(models.Model):
     """ Жанры произведений. """
-    name = models.CharField(max_length=256)
+    name = models.CharField(max_length=256, verbose_name='Навзание')
     slug = models.SlugField(max_length=50, unique=True)
 
     def __str__(self):
@@ -25,11 +28,13 @@ class Genre(models.Model):
 
     class Meta:
         ordering = ('name',)
+        verbose_name = 'Жанр'
+        verbose_name_plural = 'Жанры'
 
 
 class Category(models.Model):
     """ Категории (типы) произведений. """
-    name = models.CharField(max_length=256)
+    name = models.CharField(max_length=256, verbose_name='Название')
     slug = models.SlugField(max_length=50, unique=True)
 
     def __str__(self):
@@ -37,31 +42,39 @@ class Category(models.Model):
 
     class Meta:
         ordering = ('name',)
+        verbose_name = 'Категория'
+        verbose_name_plural = 'Категории'
 
 
 class Title(models.Model):
     """ Произведения, к которым пишут отзывы. """
-    name = models.CharField(max_length=256)
-    year = models.IntegerField()
-    rating = models.FloatField(null=True, blank=True)
-    description = models.TextField(blank=True, null=True)
+    name = models.CharField(max_length=256,
+                            verbose_name='Название произведения')
+    year = models.IntegerField(verbose_name='Год')
+    description = models.TextField(blank=True,
+                                   null=True,
+                                   verbose_name='Описание')
     genre = models.ManyToManyField(
         Genre,
         through='TitleGenre',
         related_name='title_genre',
+        verbose_name='Жанры'
     )
     category = models.ForeignKey(
         Category,
         on_delete=models.SET_NULL,
         related_name='title_category',
-        null=True
+        null=True,
+        verbose_name='Категории'
     )
+
+    def __str__(self):
+        return self.name[:TRUNCATED_MODEL_NAME]
 
     class Meta:
         ordering = ('year',)
-
-    def __str__(self):
-        self.name[:TRUNCATED_MODEL_NAME]
+        verbose_name = 'Приозведение'
+        verbose_name_plural = 'Произведения'
 
 
 class TitleGenre(models.Model):
@@ -76,13 +89,17 @@ class TitleGenre(models.Model):
 class Review(BaseModel):
     """ Отзыв на тайтл. """
     title = models.ForeignKey(Title,
-                              on_delete=models.CASCADE)
-    score = models.PositiveSmallIntegerField()
-    text = models.TextField(max_length=MAX_REVIEW_CHARACTERS)
+                              on_delete=models.CASCADE,
+                              verbose_name='Название')
+    score = models.PositiveSmallIntegerField(verbose_name='Оценка')
+    text = models.TextField(max_length=MAX_REVIEW_CHARACTERS,
+                            verbose_name='Текст отзыва')
 
     class Meta:
         default_related_name = 'reviews'
         ordering = ('pub_date',)
+        verbose_name = 'Отзыв'
+        verbose_name_plural = 'Отзывы'
         constraints = [
             models.UniqueConstraint(
                 fields=['author_id', 'title_id'],
