@@ -15,7 +15,7 @@ class TitleAdmin(admin.ModelAdmin):
         GenreItemTabular,
     ]
     search_fields = ('name', 'category')
-
+# Для "Произведения" нужно вывести жанры в листе произведений.
 
 class GenreAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug']
@@ -32,7 +32,7 @@ class ReviewAdmin(admin.ModelAdmin):
     list_filter = ['score']
     search_fields = ('text', 'title__name')
 
-
+# Регистрировать модели лучше используя декоратор @admin.register
 admin.site.register(Title, TitleAdmin)
 admin.site.register(Genre, GenreAdmin)
 admin.site.register(Category, CategoryAdmin)

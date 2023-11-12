@@ -7,7 +7,8 @@ admin.site.empty_value_display = 'Не задано'
 
 
 @admin.register(User)
-class UserAdmin(admin.ModelAdmin):
+class UserAdmin(admin.ModelAdmin): # admin.ModelAdmin Не подходит для модели User, нужно использовать
+                                   # UserAdmin из django.contrib.auth.admin, можно импортировать его как as BaseUserAdmin.
     list_display = ('username', 'email', 'first_name',
                     'last_name', 'bio', 'role',
                     'reviews_count')

@@ -20,6 +20,8 @@ class RegisterSerializer(UserMixin, serializers.Serializer):
                                    required=True)
 
     def create(self, validated_data):
+        # try тут не нужен в 28 строке ничего не сломается.
+        # Нужно только вернуть пользователя, а 35-42 убрать во вью.
         try:
             username = validated_data.get('username')
             email = validated_data.get('email')
@@ -74,7 +76,8 @@ class DetailedTitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
     rating = serializers.FloatField(source='rating_avg',
-                                    read_only=True)
+                                    read_only=True) # Рейтинг не может быть вещественным!
+                                                    # Убрать source
 
     class Meta:
         model = Title
@@ -99,7 +102,8 @@ class CreateTitleSerializer(serializers.ModelSerializer):
         return value
 
     def to_representation(self, instance):
-        serializer = DetailedTitleSerializer(instance)
+        serializer = DetailedTitleSerializer(instance) # Лишняя переменная, потому что одноразовая,
+                                                       # можно сразу возвращать(печатать) результат.
         return serializer.data
 
 

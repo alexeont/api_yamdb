@@ -22,7 +22,8 @@ related_fields = {
 
 def import_data_from_csv():
     for file_name, model in models_dict.items():
-        with open(f'static/data/{file_name}.csv', newline='',
+        with open(f'static/data/{file_name}.csv', newline='', ''' Нужна страховка открытия файла.
+                                                                  А ниже выводы в консоль, что загрузка чего то началась и закончилась.'''
                   encoding='utf-8') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:

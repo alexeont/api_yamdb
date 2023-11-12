@@ -38,7 +38,7 @@ class UserRegisterApiView(APIView):
 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True):
+        if serializer.is_valid(raise_exception=True): # Условие тут не нужно, то что в скобках и так вернёт 400 код, если что пойдет не так.
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -91,6 +91,8 @@ class UserViewSet(ModelViewSet):
 
 ''' Core Views. '''
 
+# Для жанра и категории сделать миксин, тогда в дочках останется по две строки.
+# Для миксина уже есть файл в api
 
 class GenreViewSet(mixins.ListModelMixin,
                    mixins.CreateModelMixin,
@@ -124,12 +126,18 @@ class TitleViewSet(viewsets.ModelViewSet):
     """ Получение списка всех объектов. """
 
     queryset = Title.objects.annotate(
-        rating_avg=Avg('reviews__score')
+        rating_avg=Avg('reviews__score') # Убрать _avg
     ).order_by('id')
+    ''' Никакого прока от сортировки по техническому полю "ключ" нет.
+Учти, что значения ключей - это случайные величины (точнее они могут непредсказуемо измениться).
+Поэтому сортировка по ним - это опять случайная последовательность объектов.
+Лучше заменить на предметное поле (можно на несколько полей - ведь это перечисление)'''
     permission_classes = (Admin | ReadOnly,)
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filterset_class = CustomFilter
     http_method_names = ('get', 'post', 'patch', 'delete')
+    # Нужно ограничить сортировку в теле Viewset, см.
+    # https://www.django-rest-framework.org/api-guide/filtering/#specifying-which-fields-may-be-ordered-against
 
     def get_serializer_class(self):
         if self.action in ('create', 'partial_update', 'delete'):
