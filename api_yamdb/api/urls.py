@@ -6,9 +6,9 @@ from .views import (
     TitleViewSet,
     GenreViewSet,
     CategoryViewSet,
-    RegisterViewSet,
+    UserRegisterApiView,
     ReviewViewSet,
-    UserRecieveTokenViewSet,
+    UserRecieveTokenApiView,
     UserViewSet,
 )
 
@@ -25,13 +25,13 @@ s_router_v1.register(
     CommentViewSet,
     basename='comments'
 )
-s_router_v1.register(r'genres', GenreViewSet, basename='genres')     # Change when views are ready
-s_router_v1.register(r'categories', CategoryViewSet, basename='categories')  # Change when views are ready
+s_router_v1.register(r'genres', GenreViewSet, basename='genres')
+s_router_v1.register(r'categories', CategoryViewSet, basename='categories')
 
 auth_urls = [
-    path('signup/', RegisterViewSet.as_view({'post': 'create'}),
+    path('signup/', UserRegisterApiView.as_view(),
          name='signup'),
-    path('token/', UserRecieveTokenViewSet.as_view({'post': 'create'}),
+    path('token/', UserRecieveTokenApiView.as_view(),
          name='token'),
 ]
 

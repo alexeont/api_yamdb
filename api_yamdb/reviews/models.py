@@ -8,6 +8,7 @@ from users.models import User
 
 class NameSlugModel(models.Model):
     """ Базовый класс для Жанра и Категории. """
+    
     name = models.CharField('Название',
                             max_length=MAX_NAME_CHARS)
     slug = models.SlugField('Слаг',
@@ -24,6 +25,7 @@ class NameSlugModel(models.Model):
 
 class AuthorTextPubdateModel(models.Model):
     """ Базовый класс для Ревью и Коммента. """
+    
     pub_date = models.DateTimeField('Дата публикации', auto_now_add=True)
     author = models.ForeignKey(User,
                                on_delete=models.CASCADE,
@@ -46,6 +48,7 @@ class Genre(NameSlugModel):
         verbose_name_plural = 'Жанры' 
 
 
+
 class Category(NameSlugModel):
     """ Категории (типы) произведений. """
 
@@ -54,8 +57,10 @@ class Category(NameSlugModel):
         verbose_name_plural = 'Категории' 
 
 
+
 class Title(models.Model):
     """ Произведения, к которым пишут отзывы. """
+    
     name = models.CharField('Название произведения',
                             max_length=MAX_NAME_CHARS)
     year = models.SmallIntegerField('Год')
@@ -74,6 +79,9 @@ class Title(models.Model):
         verbose_name='Категория'
     )
 
+    def __str__(self):
+        return self.name[:TRUNCATED_MODEL_NAME]
+
     class Meta:
         ordering = ('year',)
         verbose_name = 'произведение'
@@ -85,6 +93,7 @@ class Title(models.Model):
 
 class TitleGenre(models.Model):
     """ Промежуточная таблица для связи произведений и жанров. """
+    
     title = models.ForeignKey(Title,
                               on_delete=models.CASCADE,
                               verbose_name='Название произведения')
@@ -98,10 +107,12 @@ class TitleGenre(models.Model):
 
 class Review(AuthorTextPubdateModel):
     """ Отзыв на Тайтл. """
+    
     title = models.ForeignKey(Title,
                               on_delete=models.CASCADE,
                               verbose_name='Отзыв на: ')
     score = models.PositiveSmallIntegerField('Оценка')
+
 
     class Meta(AuthorTextPubdateModel.Meta):
         default_related_name = 'reviews'
@@ -117,6 +128,7 @@ class Review(AuthorTextPubdateModel):
 
 class Comment(AuthorTextPubdateModel):
     """ Комментарий на отзыв. """
+    
     review = models.ForeignKey(Review,
                                on_delete=models.CASCADE,
                                verbose_name='Комментарий к: ')

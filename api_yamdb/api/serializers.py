@@ -1,50 +1,59 @@
+from django.db import IntegrityError
+from django.conf import settings
+from django.core.mail import send_mail
+from django.contrib.auth.tokens import default_token_generator
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
 from reviews.constants import MIN_SCORE_VALUE, MAX_SCORE_VALUE
 from reviews.models import Category, Comment, Genre, Review, Title
+from reviews.constants import (MAX_USERNAME_CHARACTERS, MAX_EMAIL_CHARACTERS,
+                               MAX_CODE_CHARACTERS)
 from users.models import User
+from .mixins import UserMixin
 
 
-class RegisterSerializer(serializers.ModelSerializer):
-    '''Для классов Регистрации и Проверки токена не нужно общение с БД, нужно переопределить родительский класс.
-Так же смотри замечание в модели про валидацию и про длину полей, это касается всех сериалайзеров для Пользователя.'''
+class RegisterSerializer(UserMixin, serializers.Serializer):
+    username = serializers.CharField(max_length=MAX_USERNAME_CHARACTERS,
+                                     required=True,)
+    email = serializers.EmailField(max_length=MAX_EMAIL_CHARACTERS,
+                                   required=True)
 
-    class Meta:
-        model = User
-        fields = (
-            'username', 'email'
-        )
+    def create(self, validated_data):
+        try:
+            username = validated_data.get('username')
+            email = validated_data.get('email')
+            user, create = User.objects.get_or_create(username=username,
+                                                      email=email)
+        except IntegrityError:
+            raise serializers.ValidationError(
+                'Пользователь с такими данными уже существует'
+            )
 
-    def validate(self, data):
-        if data.get('username') == 'me': # Этого мало, нужна проверка на регулярку, см. в модели.
-                                         # Тоже самое для всех сериализаторов пользователя.
-            raise serializers.ValidationError('Недопустимое имя пользователя')
-        if User.objects.filter(email=data.get('email')):
-            raise serializers.ValidationError('Такой e-mail уже есть')
-        if User.objects.filter(username=data.get('username')):
-            raise serializers.ValidationError('Такой пользователь уже есть')
-        return data
+        confirmation_code = default_token_generator.make_token(user)
+        send_mail(
+            subject='Ваш код регистрации',
+            message=(f'Код регистрации для {username}: '
+                     f'{confirmation_code}'),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    fail_silently=True,)
+        return user
 
 
-class UserRecieveTokenSerializer(serializers.Serializer):
-    username = serializers.RegexField(regex=r'^[\w.@+-]+$',
-                                      max_length=150,
-                                      required=True)
-    confirmation_code = serializers.CharField(max_length=254,
+class UserRecieveTokenSerializer(UserMixin, serializers.Serializer):
+    username = serializers.CharField(max_length=MAX_USERNAME_CHARACTERS,
+                                     required=True)
+    confirmation_code = serializers.CharField(max_length=MAX_CODE_CHARACTERS,
                                               required=True)
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserSerializer(UserMixin, serializers.ModelSerializer):
+
     class Meta:
         model = User
         fields = ('username', 'email', 'first_name',
                   'last_name', 'bio', 'role')
-
-    def validate_username(self, username):
-        if username == 'me':
-            raise serializers.ValidationError('Недопустимое имя пользователя')
-        return username
 
 
 class GenreSerializer(serializers.ModelSerializer):
@@ -64,19 +73,13 @@ class CategorySerializer(serializers.ModelSerializer):
 class DetailedTitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
-    rating = serializers.SerializerMethodField()
+    rating = serializers.FloatField(source='rating_avg',
+                                    read_only=True)
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'rating',
-                  'description', 'category', 'genre')
-
-    def get_rating(self, obj):
-        reviews = Review.objects.filter(title=obj.id)
-        if reviews:
-            total_score = sum(review.score for review in reviews)
-            return total_score / len(reviews)
-        return None
+        fields = ('id', 'name', 'year',
+                  'description', 'rating', 'category', 'genre')
 
 
 class CreateTitleSerializer(serializers.ModelSerializer):
@@ -88,14 +91,16 @@ class CreateTitleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Title
-        fields = ('id', 'name', 'year', 'description', 'category', 'genre')
-        read_only_fields = ('rating',)
-    
-    '''Так у нас вывод информации после Пост запроса будет не по ТЗ,
-    нужно добавить сюда метод который позволит выводить информацию как при гет запросе.
-    Не путаем нужно написать всего один метод.
-    Нужна валидация поля Жанра, у нас по ТЗ это поля обязательное, если сейчас
-    передать пустой список через Postman, то Произведение создастся вообще без Жанров'''
+        fields = ('id', 'name', 'year', 'description', 'genre', 'category')
+
+    def validate_genre(self, value):
+        if not value:
+            raise serializers.ValidationError("Genre list cannot be empty.")
+        return value
+
+    def to_representation(self, instance):
+        serializer = DetailedTitleSerializer(instance)
+        return serializer.data
 
 
 class ReviewSerializer(serializers.ModelSerializer):
