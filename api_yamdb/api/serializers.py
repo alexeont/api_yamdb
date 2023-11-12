@@ -75,9 +75,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class DetailedTitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
-    rating = serializers.FloatField(source='rating_avg',
-                                    read_only=True) # Рейтинг не может быть вещественным!
-                                                    # Убрать source
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title

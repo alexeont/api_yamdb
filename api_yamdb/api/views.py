@@ -1,7 +1,7 @@
 from django.db.models import Avg
 from rest_framework.filters import OrderingFilter
 from django.shortcuts import get_object_or_404
-from rest_framework import (filters, mixins, permissions,
+from rest_framework import (filters, permissions,
                             status, viewsets)
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.decorators import action
@@ -13,6 +13,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from .permissions import Admin, IsAuthorOrReadOnly, Moderator, ReadOnly
 from .filters import CustomFilter
+from .mixins import ObjectMixim
 from .serializers import (CategorySerializer,
                           CommentSerializer,
                           GenreSerializer,
@@ -91,53 +92,32 @@ class UserViewSet(ModelViewSet):
 
 ''' Core Views. '''
 
-# Для жанра и категории сделать миксин, тогда в дочках останется по две строки.
-# Для миксина уже есть файл в api
 
-class GenreViewSet(mixins.ListModelMixin,
-                   mixins.CreateModelMixin,
-                   mixins.DestroyModelMixin,
-                   viewsets.GenericViewSet):
+class GenreViewSet(ObjectMixim):
     ''' Получение списка, создание и удаление жанров. '''
 
     queryset = Genre.objects.all()
-    filter_backends = (filters.SearchFilter,)
     serializer_class = GenreSerializer
-    permission_classes = (Admin | ReadOnly,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
 
 
-class CategoryViewSet(mixins.ListModelMixin,
-                      mixins.CreateModelMixin,
-                      mixins.DestroyModelMixin,
-                      viewsets.GenericViewSet):
+class CategoryViewSet(ObjectMixim):
     """ Получение списка, создание и удаление категорий. """
 
     queryset = Category.objects.all()
-    filter_backends = (filters.SearchFilter,)
     serializer_class = CategorySerializer
-    permission_classes = (Admin | ReadOnly,)
-    search_fields = ('name',)
-    lookup_field = 'slug'
 
 
 class TitleViewSet(viewsets.ModelViewSet):
     """ Получение списка всех объектов. """
 
     queryset = Title.objects.annotate(
-        rating_avg=Avg('reviews__score') # Убрать _avg
-    ).order_by('id')
-    ''' Никакого прока от сортировки по техническому полю "ключ" нет.
-Учти, что значения ключей - это случайные величины (точнее они могут непредсказуемо измениться).
-Поэтому сортировка по ним - это опять случайная последовательность объектов.
-Лучше заменить на предметное поле (можно на несколько полей - ведь это перечисление)'''
+        rating=Avg('reviews__score')
+    ).order_by('name', '-year')
     permission_classes = (Admin | ReadOnly,)
     filter_backends = (DjangoFilterBackend, OrderingFilter)
     filterset_class = CustomFilter
     http_method_names = ('get', 'post', 'patch', 'delete')
-    # Нужно ограничить сортировку в теле Viewset, см.
-    # https://www.django-rest-framework.org/api-guide/filtering/#specifying-which-fields-may-be-ordered-against
+    ordering_fields = ['name', 'year']
 
     def get_serializer_class(self):
         if self.action in ('create', 'partial_update', 'delete'):
