@@ -1,14 +1,16 @@
-from django.core.mail import send_mail
 from django.db.models import Avg
 from rest_framework.filters import OrderingFilter
 from django.shortcuts import get_object_or_404
-from rest_framework import (filters, generics, mixins, permissions,
+from rest_framework import (filters, generics, permissions,
                             status, viewsets)
 from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework.views import APIView
+from rest_framework.viewsets import ModelViewSet
+
 
 from .permissions import Admin, IsAuthorOrReadOnly, Moderator, ReadOnly
 from .filters import CustomFilter
@@ -28,40 +30,27 @@ from users.models import User
 ''' User Views. '''
 
 
-class RegisterViewSet(mixins.CreateModelMixin, viewsets.GenericViewSet):  # Избыточный родитель, тут хватит либо APIView либо вообще функции с декоратором @api_view.
-                                                                          # То же самое для класса получения токена.
-    ''' Отправка письма с кодом регистрации для получения токена. '''
+class UserRegisterApiView(APIView):
+    ''' Получение кода регистрации для получения токена. '''
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = (permissions.AllowAny,)
 
-    def create(self, request):
-        if not User.objects.filter(username=request.data.get('username'),  # Вся валидация должна быть в сериализаторе.
-                                   email=request.data.get('email')).exists():
-            serializer = RegisterSerializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            user = User.objects.create(**serializer.validated_data)  # Создавать пользователя лучше в сериализаторе в методе create
-        else:
-            user = User.objects.get(username=request.data.get('username'))
-        confirmation_code = default_token_generator.make_token(user)
-        send_mail(
-            subject='Ваш код регистрации',
-            message=(f'Код регистрации для {request.data.get("username")}: '
-                     f'{confirmation_code}'),
-                    from_email='domashkapraktikum@yandex.ru',  # Это есть в settings.
-                    recipient_list=[request.data.get('email')],
-                    fail_silently=True,)
-        return Response(request.data, status=status.HTTP_200_OK)
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid(raise_exception=True):
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class UserRecieveTokenViewSet(mixins.CreateModelMixin,
-                              viewsets.GenericViewSet):
+class UserRecieveTokenApiView(APIView):
     ''' Получение JWT-токена по коду подтверждения. '''
     queryset = User.objects.all()
     serializer_class = UserRecieveTokenSerializer
     permission_classes = (permissions.AllowAny,)
 
-    def create(self, request):
+    def post(self, request):
         serializer = UserRecieveTokenSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         confirmation_code = serializer.validated_data['confirmation_code']
@@ -73,14 +62,15 @@ class UserRecieveTokenViewSet(mixins.CreateModelMixin,
         return Response(message, status=status.HTTP_200_OK)
 
 
-class UserViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,  # Тут нужен ModelViewSet, просто ограничить метод put в теле ViewSet.
-                  viewsets.GenericViewSet):
+class UserViewSet(ModelViewSet):
     ''' Получение информации и измение данных пользователей. '''
+    lookup_field = 'username'
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = (Admin,)
     filter_backends = (filters.SearchFilter,)
     search_fields = ('username',)
+    http_method_names = ['get', 'post', 'patch', 'delete']
 
     @action(methods=['get', 'patch'], detail=False,
             url_path='me', permission_classes=(permissions.IsAuthenticated,))
@@ -94,21 +84,6 @@ class UserViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,  # Тут ну
             serializer.save(role=request.user.role)
             return Response(serializer.data, status=status.HTTP_200_OK)
         serializer = UserSerializer(request.user)
-        return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @action(methods=['get', 'patch', 'delete'], detail=False,
-            url_path=r'(?P<username>[\w.@+-]+)')
-    def get_user_by_username(self, request, username):  # Лишний метод, в полном ViewSet он будет не нужен.
-        user = get_object_or_404(User, username=username)
-        if request.method == 'PATCH':
-            serializer = UserSerializer(user, data=request.data, partial=True)
-            serializer.is_valid(raise_exception=True)
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        elif request.method == 'DELETE':
-            user.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        serializer = UserSerializer(user)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
 

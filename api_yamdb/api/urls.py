@@ -6,9 +6,9 @@ from .views import (
     TitleViewSet,
     GenreViewSet,
     CategoryViewSet,
-    RegisterViewSet,
+    UserRegisterApiView,
     ReviewViewSet,
-    UserRecieveTokenViewSet,
+    UserRecieveTokenApiView,
     UserViewSet,
 )
 
@@ -36,9 +36,9 @@ s_router_v1.register(
 )
 
 urlpatterns = [
-    path('v1/auth/signup/', RegisterViewSet.as_view({'post': 'create'}),
+    path('v1/auth/signup/', UserRegisterApiView.as_view(),
          name='signup'),
-    path('v1/auth/token/', UserRecieveTokenViewSet.as_view({'post': 'create'}),
+    path('v1/auth/token/', UserRecieveTokenApiView.as_view(),
          name='token'),
     path('v1/', include(s_router_v1.urls)),
 ]
