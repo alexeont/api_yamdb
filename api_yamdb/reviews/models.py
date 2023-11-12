@@ -4,7 +4,7 @@ from .constants import (MAX_NAME_CHARS,
                         MAX_SLUG_CHARS,
                         TRUNCATED_MODEL_NAME,)
 from users.models import User
-from .validators import validate_year
+from .validators import validate_year, validate_score
 
 
 class NameSlugModel(models.Model):
@@ -63,7 +63,7 @@ class Title(models.Model):
     name = models.CharField('Название произведения',
                             max_length=MAX_NAME_CHARS)
     year = models.SmallIntegerField('Год', db_index=True,
-                                    validators=[validate_year])
+                                    validators=(validate_year,))
     description = models.TextField('Описание', blank=True, null=True)
     genre = models.ManyToManyField(
         Genre,
@@ -79,16 +79,13 @@ class Title(models.Model):
         verbose_name='Категория'
     )
 
-    def __str__(self):
-        return self.name[:TRUNCATED_MODEL_NAME]
-
     class Meta:
         ordering = ('year',)
         verbose_name = 'произведение'
         verbose_name_plural = 'Произведения'
 
     def __str__(self):
-        self.name[:TRUNCATED_MODEL_NAME]
+        return self.name[:TRUNCATED_MODEL_NAME]
 
 
 class TitleGenre(models.Model):
@@ -111,7 +108,8 @@ class Review(AuthorTextPubdateModel):
     title = models.ForeignKey(Title,
                               on_delete=models.CASCADE,
                               verbose_name='Отзыв на: ')
-    score = models.PositiveSmallIntegerField('Оценка')
+    score = models.PositiveSmallIntegerField('Оценка',
+                                             validators=(validate_score,))
 
     class Meta(AuthorTextPubdateModel.Meta):
         default_related_name = 'reviews'
@@ -119,7 +117,7 @@ class Review(AuthorTextPubdateModel):
         verbose_name_plural = 'Отзывы'
         constraints = [
             models.UniqueConstraint(
-                fields=['author_id', 'title_id'],
+                fields=('author_id', 'title_id'),
                 name='unique_review'
             )
         ]

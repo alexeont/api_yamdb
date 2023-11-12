@@ -18,21 +18,15 @@ class IsAuthorOrReadOnly(permissions.BasePermission):
 
 class Moderator(permissions.BasePermission):
     def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
-        return request.user.is_moderator
+        return (request.user.is_authenticated and request.user.is_moderator)
 
     def has_object_permission(self, request, view, obj):
-        return request.user.is_moderator
+        return (self.has_permission(request, view))
 
 
 class Admin(permissions.BasePermission):
     def has_permission(self, request, view):
-        if not request.user.is_authenticated:
-            return False
-        return request.user.is_admin
+        return (request.user.is_authenticated and request.user.is_admin)
 
     def has_object_permission(self, request, view, obj):
-        if not request.user.is_authenticated:
-            return False
-        return request.user.is_admin
+        return (self.has_permission(request, view))
