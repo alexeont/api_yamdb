@@ -3,8 +3,8 @@ from django.db import models
 from .constants import (MAX_NAME_CHARS,
                         MAX_SLUG_CHARS,
                         TRUNCATED_MODEL_NAME,)
-from users.models import User
 from .validators import validate_year, validate_score
+from users.models import User
 
 
 class NameSlugModel(models.Model):

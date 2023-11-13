@@ -1,12 +1,12 @@
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
+from .mixins import UsernameVilidatorMixin
 from reviews.constants import MIN_SCORE_VALUE, MAX_SCORE_VALUE
 from reviews.models import Category, Comment, Genre, Review, Title
 from reviews.constants import (MAX_USERNAME_CHARACTERS, MAX_EMAIL_CHARACTERS,
                                MAX_CODE_CHARACTERS)
 from users.models import User
-from .mixins import UsernameVilidatorMixin
 
 
 class RegisterSerializer(UsernameVilidatorMixin, serializers.Serializer):

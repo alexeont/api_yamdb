@@ -1,9 +1,9 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from .validators import validator_username
 from reviews.constants import (ADMIN, MODERATOR, USER,
                                MAX_USERNAME_CHARACTERS, MAX_EMAIL_CHARACTERS)
-from .validators import validator_username
 
 ROLE_CHOICES = (
     (USER, 'Пользователь'),
@@ -20,7 +20,7 @@ class User(AbstractUser):
         unique=True,
         help_text=('Обязательное поле. Не более 150 символов. '
                    'Только буквы и цифры, символы @+-'),
-        validators=[validator_username, ],
+        validators=(validator_username,),
         error_messages={
             'unique': 'Пользователь с таким именем уже есть',
         }

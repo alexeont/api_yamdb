@@ -1,7 +1,7 @@
-
-from users.validators import validator_username
 from rest_framework import mixins, viewsets, filters
+
 from .permissions import Admin, ReadOnly
+from users.validators import validator_username
 
 
 class UsernameVilidatorMixin:
@@ -9,7 +9,7 @@ class UsernameVilidatorMixin:
         return validator_username(value)
 
 
-class ObjectMixim(mixins.ListModelMixin,
+class ObjectMixin(mixins.ListModelMixin,
                   mixins.CreateModelMixin,
                   mixins.DestroyModelMixin,
                   viewsets.GenericViewSet):
