@@ -1,4 +1,3 @@
-from django.db.models import Q
 import django_filters
 
 from reviews.models import Title
@@ -13,10 +12,4 @@ class CustomFilter(django_filters.FilterSet):
 
     class Meta:
         model = Title
-        fields = ['genre', 'category', 'year', 'name']
-
-    def filter_by_genre(self, queryset, name, value):
-        return queryset.filter(Q(genre__slug=value))
-
-    def filter_by_category(self, queryset, name, value):
-        return queryset.filter(Q(category__slug=value))
+        fields = ('genre', 'category', 'year', 'name')

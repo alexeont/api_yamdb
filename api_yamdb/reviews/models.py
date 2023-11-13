@@ -1,9 +1,13 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from .constants import (MAX_NAME_CHARS,
+                        MAX_SCORE_VALUE,
                         MAX_SLUG_CHARS,
+                        MIN_SCORE_VALUE,
+                        SCORE_VALIDATION_MESSAGE,
                         TRUNCATED_MODEL_NAME,)
-from .validators import validate_year, validate_score
+from .validators import validate_year
 from users.models import User
 
 
@@ -108,8 +112,14 @@ class Review(AuthorTextPubdateModel):
     title = models.ForeignKey(Title,
                               on_delete=models.CASCADE,
                               verbose_name='Отзыв на: ')
-    score = models.PositiveSmallIntegerField('Оценка',
-                                             validators=(validate_score,))
+    score = models.PositiveSmallIntegerField(
+        'Оценка',
+        validators=(
+            MaxValueValidator(
+                MAX_SCORE_VALUE, message=SCORE_VALIDATION_MESSAGE),
+            MinValueValidator(
+                MIN_SCORE_VALUE, message=SCORE_VALIDATION_MESSAGE))
+    )
 
     class Meta(AuthorTextPubdateModel.Meta):
         default_related_name = 'reviews'

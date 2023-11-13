@@ -5,7 +5,7 @@ from django.db.models import Avg
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.tokens import default_token_generator
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import (filters, permissions,
+from rest_framework import (filters, mixins, permissions,
                             status, viewsets)
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter
@@ -15,7 +15,6 @@ from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
 from .filters import CustomFilter
-from .mixins import ObjectMixin
 from .permissions import Admin, IsAuthorOrReadOnly, Moderator, ReadOnly
 from .serializers import (CategorySerializer,
                           CommentSerializer,
@@ -44,7 +43,7 @@ class UserRegisterApiView(APIView):
         serializer = RegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        user = User.objects.get(**serializer.validated_data)
+        user = get_object_or_404(User, **serializer.validated_data)
         confirmation_code = default_token_generator.make_token(user)
         send_mail(
             subject='Ваш код регистрации',
@@ -104,14 +103,25 @@ class UserViewSet(ModelViewSet):
 """ Core Views. """
 
 
-class GenreViewSet(ObjectMixin):
+class GenreCategoryViewSet(mixins.ListModelMixin,
+                           mixins.CreateModelMixin,
+                           mixins.DestroyModelMixin,
+                           viewsets.GenericViewSet):
+    """ Базовый класс для жанров и категорий. """
+    filter_backends = (filters.SearchFilter,)
+    permission_classes = (Admin | ReadOnly,)
+    search_fields = ('name',)
+    lookup_field = 'slug'
+
+
+class GenreViewSet(GenreCategoryViewSet):
     """ Получение списка, создание и удаление жанров. """
 
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
 
 
-class CategoryViewSet(ObjectMixin):
+class CategoryViewSet(GenreCategoryViewSet):
     """ Получение списка, создание и удаление категорий. """
 
     queryset = Category.objects.all()

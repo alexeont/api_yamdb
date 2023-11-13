@@ -14,10 +14,9 @@ class TitleAdmin(admin.ModelAdmin):
                     'category', 'display_genres')
     list_filter = ('category__name',)
 
+    @admin.display(description='Жанры')
     def display_genres(self, obj):
         return ', '.join([genre.name for genre in obj.genres.all()])
-
-    display_genres.short_description = 'Жанры'
 
     inlines = [
         GenreItemTabular,
