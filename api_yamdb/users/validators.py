@@ -2,12 +2,13 @@ import re
 
 from django.core.exceptions import ValidationError
 
+from reviews.constants import REGEX_USERNAME, USERNAME_ME
+
 
 def validator_username(value):
-    if value == 'me':
+    if value == USERNAME_ME:
         raise ValidationError(f'Имя пользователя {value} недопустимо')
-    newstr = re.sub(r'^[\w.@+-]+\Z', '', value) # r'^[\w.@+-]+\Z' Вынести в константу, как и me
-                                                # Чтобы не было повторов, лучше использовать set, так же потребуется join, чтобы объединить строку.
-    if value in newstr:
-        raise ValidationError(f'Имя не должно содержать {newstr}')
+    newstr = set(re.sub(REGEX_USERNAME, '', value))
+    if newstr:
+        raise ValidationError(f'Имя не должно содержать: {" ".join(newstr)}')
     return value

@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group
 
 from .models import User
@@ -7,8 +8,7 @@ admin.site.empty_value_display = 'Не задано'
 
 
 @admin.register(User)
-class UserAdmin(admin.ModelAdmin): # admin.ModelAdmin Не подходит для модели User, нужно использовать
-                                   # UserAdmin из django.contrib.auth.admin, можно импортировать его как as BaseUserAdmin.
+class UserAdmin(BaseUserAdmin):
     list_display = ('username', 'email', 'first_name',
                     'last_name', 'bio', 'role',
                     'reviews_count')

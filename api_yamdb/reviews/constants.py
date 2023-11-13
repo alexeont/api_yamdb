@@ -1,6 +1,8 @@
 ADMIN = 'admin'
 MODERATOR = 'moderator'
 USER = 'user'
+USERNAME_ME = 'me'
+REGEX_USERNAME = r'^[\w.@+-]+\Z'
 TRUNCATED_MODEL_NAME = 25
 MAX_NAME_CHARS = 256
 MAX_SLUG_CHARS = 50

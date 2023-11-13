@@ -1,7 +1,3 @@
-from django.db import IntegrityError
-from django.conf import settings
-from django.core.mail import send_mail
-from django.contrib.auth.tokens import default_token_generator
 from rest_framework import serializers
 from rest_framework.relations import SlugRelatedField
 
@@ -10,47 +6,42 @@ from reviews.models import Category, Comment, Genre, Review, Title
 from reviews.constants import (MAX_USERNAME_CHARACTERS, MAX_EMAIL_CHARACTERS,
                                MAX_CODE_CHARACTERS)
 from users.models import User
-from .mixins import UserMixin
+from .mixins import UsernameVilidatorMixin
 
 
-class RegisterSerializer(UserMixin, serializers.Serializer):
+class RegisterSerializer(UsernameVilidatorMixin, serializers.Serializer):
     username = serializers.CharField(max_length=MAX_USERNAME_CHARACTERS,
                                      required=True,)
     email = serializers.EmailField(max_length=MAX_EMAIL_CHARACTERS,
                                    required=True)
 
     def create(self, validated_data):
-        # try тут не нужен в 28 строке ничего не сломается.
-        # Нужно только вернуть пользователя, а 35-42 убрать во вью.
-        try:
-            username = validated_data.get('username')
-            email = validated_data.get('email')
-            user, create = User.objects.get_or_create(username=username,
-                                                      email=email)
-        except IntegrityError:
-            raise serializers.ValidationError(
-                'Пользователь с такими данными уже существует'
-            )
-
-        confirmation_code = default_token_generator.make_token(user)
-        send_mail(
-            subject='Ваш код регистрации',
-            message=(f'Код регистрации для {username}: '
-                     f'{confirmation_code}'),
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[email],
-                    fail_silently=True,)
+        username = validated_data.get('username')
+        email = validated_data.get('email')
+        user, create = User.objects.get_or_create(username=username,
+                                                  email=email)
         return user
 
+    def validate(self, data):
+        username = data.get('username')
+        email = data.get('email')
+        if not User.objects.filter(username=username, email=email):
+            if User.objects.filter(email=email):
+                raise serializers.ValidationError('Такой e-mail уже есть')
+            if User.objects.filter(username=username):
+                raise serializers.ValidationError('Такой username уже есть')
+        return data
 
-class UserRecieveTokenSerializer(UserMixin, serializers.Serializer):
+
+class UserRecieveTokenSerializer(UsernameVilidatorMixin,
+                                 serializers.Serializer):
     username = serializers.CharField(max_length=MAX_USERNAME_CHARACTERS,
                                      required=True)
     confirmation_code = serializers.CharField(max_length=MAX_CODE_CHARACTERS,
                                               required=True)
 
 
-class UserSerializer(UserMixin, serializers.ModelSerializer):
+class UserSerializer(UsernameVilidatorMixin, serializers.ModelSerializer):
 
     class Meta:
         model = User

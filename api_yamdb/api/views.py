@@ -1,3 +1,6 @@
+from django.conf import settings
+from django.core.mail import send_mail
+from django.contrib.auth.tokens import default_token_generator
 from django.db.models import Avg
 from rest_framework.filters import OrderingFilter
 from django.shortcuts import get_object_or_404
@@ -38,10 +41,18 @@ class UserRegisterApiView(APIView):
 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid(raise_exception=True): # Условие тут не нужно, то что в скобках и так вернёт 400 код, если что пойдет не так.
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        user = User.objects.get(**serializer.validated_data)
+        confirmation_code = default_token_generator.make_token(user)
+        send_mail(
+            subject='Ваш код регистрации',
+            message=(f'Код регистрации для {user.username}: '
+                     f'{confirmation_code}'),
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[user.email],
+                    fail_silently=True,)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 class UserRecieveTokenApiView(APIView):
