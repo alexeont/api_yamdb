@@ -37,7 +37,7 @@ def import_data_from_csv():
 
                     model.objects.get_or_create(**obj_data)
 
-            print(f"Загрузка данных из файла {file_name}.csv завершена.")
+            print(f'Загрузка данных из файла {file_name}.csv завершена.')
 
         except Exception as e:
-            print(f"Ошибка при загрузке данных из файла {file_name}.csv: {e}")
+            print(f'Ошибка при загрузке данных из файла {file_name}.csv: {e}')
