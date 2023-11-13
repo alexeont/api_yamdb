@@ -26,7 +26,7 @@ class User(AbstractUser):
         }
     )
     email = models.EmailField('E-mail: ', max_length=MAX_EMAIL_CHARACTERS,
-                              unique=True, null=False) # null=False Является значением по умолчанию, значения по умолчанию писать не нужно.
+                              unique=True)
     first_name = models.CharField('Имя: ',
                                   max_length=MAX_USERNAME_CHARACTERS,
                                   blank=True)
@@ -34,9 +34,9 @@ class User(AbstractUser):
                                  max_length=MAX_USERNAME_CHARACTERS,
                                  blank=True)
     role = models.CharField('Роль: ',
-                            max_length=max([len(i[0]) for i in ROLE_CHOICES]),
-                            choices=ROLE_CHOICES, default=USER) # Избавиться от индексов, распаковывать 2 переменные, если какая то переменная не используется ей принято не давать имени, а записать так - _.
-                                                                # Не допустимо использовать однобуквенные переменные.
+                            max_length=max([len(role)
+                                            for role, _ in ROLE_CHOICES]),
+                            choices=ROLE_CHOICES, default=USER)
     bio = models.TextField('Биография: ', blank=True)
 
     @property
@@ -50,9 +50,8 @@ class User(AbstractUser):
         return self.role == MODERATOR
 
     class Meta:
-        verbose_name = "Пользователь" # Не консистентные кавычки.
-                                      # Все кавычки в файле должны быть одного типа, кроме вложенных (у докстрингс кавычки всегда двойные).
-        verbose_name_plural = "Пользователи"
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
         ordering = ('username',)
 
     def __str__(self):
