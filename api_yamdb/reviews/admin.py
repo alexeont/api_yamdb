@@ -6,34 +6,38 @@ class GenreItemTabular(admin.TabularInline):
     model = TitleGenre
 
 
+@admin.register(Title)
 class TitleAdmin(admin.ModelAdmin):
     list_display = ['id', 'name',
-                    'year',
-                    'description', 'category']
+                    'year', 'description',
+                    'category', 'display_genres']
     list_filter = ['category__name']
+
+    def display_genres(self, obj):
+        return ', '.join([genre.name for genre in obj.genres.all()])
+
+    display_genres.short_description = 'Жанры'
+
     inlines = [
         GenreItemTabular,
     ]
     search_fields = ('name', 'category')
-# Для "Произведения" нужно вывести жанры в листе произведений.
 
+
+@admin.register(Genre)
 class GenreAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug']
     search_fields = ('name',)
 
 
+@admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ['name', 'slug']
     search_fields = ('name',)
 
 
+@admin.register(Review)
 class ReviewAdmin(admin.ModelAdmin):
     list_display = ['text', 'score', 'title']
     list_filter = ['score']
     search_fields = ('text', 'title__name')
-
-# Регистрировать модели лучше используя декоратор @admin.register
-admin.site.register(Title, TitleAdmin)
-admin.site.register(Genre, GenreAdmin)
-admin.site.register(Category, CategoryAdmin)
-admin.site.register(Review, ReviewAdmin)

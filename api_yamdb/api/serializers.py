@@ -66,9 +66,7 @@ class CategorySerializer(serializers.ModelSerializer):
 class DetailedTitleSerializer(serializers.ModelSerializer):
     category = CategorySerializer()
     genre = GenreSerializer(many=True)
-    rating = serializers.FloatField(source='rating_avg',
-                                    read_only=True) # Рейтинг не может быть вещественным!
-                                                    # Убрать source
+    rating = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Title
@@ -93,9 +91,7 @@ class CreateTitleSerializer(serializers.ModelSerializer):
         return value
 
     def to_representation(self, instance):
-        serializer = DetailedTitleSerializer(instance) # Лишняя переменная, потому что одноразовая,
-                                                       # можно сразу возвращать(печатать) результат.
-        return serializer.data
+        return DetailedTitleSerializer(instance).data
 
 
 class ReviewSerializer(serializers.ModelSerializer):

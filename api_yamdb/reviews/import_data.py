@@ -22,17 +22,22 @@ related_fields = {
 
 def import_data_from_csv():
     for file_name, model in models_dict.items():
-        with open(f'static/data/{file_name}.csv', newline='', ''' Нужна страховка открытия файла.
-                                                                  А ниже выводы в консоль, что загрузка чего то началась и закончилась.'''
-                  encoding='utf-8') as csvfile:
-            reader = csv.DictReader(csvfile)
-            for row in reader:
-                obj_data = {key: value for key, value in row.items()}
-                for field, related_model in related_fields.get(
-                    file_name, {}
-                ).items():
-                    obj_data[field] = related_model.objects.get(
-                        id=int(row[field])
-                    )
+        try:
+            with open(f'static/data/{file_name}.csv', newline='',
+                      encoding='utf-8') as csvfile:
+                reader = csv.DictReader(csvfile)
+                for row in reader:
+                    obj_data = {key: value for key, value in row.items()}
+                    for field, related_model in related_fields.get(
+                        file_name, {}
+                    ).items():
+                        obj_data[field] = related_model.objects.get(
+                            id=int(row[field])
+                        )
 
-                model.objects.get_or_create(**obj_data)
+                    model.objects.get_or_create(**obj_data)
+
+            print(f'Загрузка данных из файла {file_name}.csv завершена.')
+
+        except Exception as e:
+            print(f'Ошибка при загрузке данных из файла {file_name}.csv: {e}')
